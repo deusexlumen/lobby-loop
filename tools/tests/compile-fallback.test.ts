@@ -26,19 +26,27 @@ const readAll = (db: DatabaseSync, sql: string): Row[] => db.prepare(sql).all() 
 test('compileFallback: JSON → DB → auslesen (Roundtrip)', () => {
   const summary = compileFallback({ contentDir: CONTENT_DIR, outFile: OUT_FILE });
   try {
-    assert.equal(summary.scenes, 2);
-    assert.ok(summary.nodes >= 8);
-    assert.ok(summary.combinations >= 1);
-    assert.ok(summary.minigameRounds >= 6);
+    assert.equal(summary.scenes, 5);
+    assert.ok(summary.nodes >= 21);
+    assert.ok(summary.combinations >= 5);
+    assert.ok(summary.minigameRounds >= 13);
 
     const db = new DatabaseSync(OUT_FILE, { readOnly: true });
     try {
       const scenes = readAll(db, 'SELECT id, display_name, json FROM scenes ORDER BY id');
       assert.deepEqual(
         scenes.map((s) => s.id),
-        ['kommunalpolitik', 'untersuchungsausschuss'],
+        [
+          'aufsichtsratssitzung',
+          'fraktionssitzung',
+          'kommunalpolitik',
+          'pressekonferenz',
+          'untersuchungsausschuss',
+        ],
       );
-      const kommune = JSON.parse(scenes[0]!.json as string) as { nodes: unknown[]; exits: unknown[] };
+      const kommune = JSON.parse(
+        scenes.find((s) => s.id === 'kommunalpolitik')!.json as string,
+      ) as { nodes: unknown[]; exits: unknown[] };
       assert.equal(kommune.nodes.length, 4);
       assert.equal(kommune.exits.length, 1);
 

@@ -9,6 +9,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   validateActionRequest,
+  validateEpitaphRequest,
+  validateEpitaphResponse,
   validateGmResponse,
   validateMinigameJudgeRequest,
   validateMinigameJudgeResponse,
@@ -160,4 +162,57 @@ test('validateMinigameJudgeResponse prüft Felder', () => {
   assert.equal(validateMinigameJudgeResponse({ ...valid, correct: 'ja' }), null);
   assert.equal(validateMinigameJudgeResponse({ ...valid, correct_index: 5 }), null);
   assert.equal(validateMinigameJudgeResponse({ ...valid, commentary: '' }), null);
+});
+
+test('validateActionRequest akzeptiert optionale session_id', () => {
+  const parsed = validateActionRequest({ ...VALID_ACTION, session_id: 'savegame_1' });
+  assert.notEqual(parsed, null);
+  assert.equal(parsed!.session_id, 'savegame_1');
+  assert.equal(validateActionRequest({ ...VALID_ACTION, session_id: '' }), null);
+  assert.equal(validateActionRequest({ ...VALID_ACTION, session_id: 42 }), null);
+});
+
+test('validateResultRequest erbt session_id', () => {
+  const parsed = validateResultRequest({ ...VALID_ACTION, session_id: 'run-7', roll: VALID_ROLL });
+  assert.notEqual(parsed, null);
+  assert.equal(parsed!.session_id, 'run-7');
+});
+
+const VALID_EPITAPH_STATS = {
+  rolls: [{ dice: 'W20', value: 3, total: 3, difficulty_class: 14, success: false }],
+  items_burned: ['schwarzer_koffer'],
+  minigame: { won: 1, lost: 3 },
+  alignment_timeline: [0, -2, -4, -9],
+  started_at: '2026-09-17T10:00:00.000Z',
+};
+
+test('validateEpitaphRequest akzeptiert gültige Stats mit und ohne session_id', () => {
+  const withSession = validateEpitaphRequest({ session_id: 'savegame_1', stats: VALID_EPITAPH_STATS });
+  assert.notEqual(withSession, null);
+  assert.equal(withSession!.session_id, 'savegame_1');
+  assert.equal(withSession!.stats.items_burned.length, 1);
+
+  const withoutSession = validateEpitaphRequest({ stats: VALID_EPITAPH_STATS });
+  assert.notEqual(withoutSession, null);
+  assert.equal(withoutSession!.session_id, undefined);
+});
+
+test('validateEpitaphRequest lehnt kaputte Stats ab', () => {
+  assert.equal(validateEpitaphRequest({ stats: 'keine stats' }), null);
+  assert.equal(validateEpitaphRequest({ stats: { ...VALID_EPITAPH_STATS, rolls: 'viele' } }), null);
+  assert.equal(validateEpitaphRequest({ stats: { ...VALID_EPITAPH_STATS, items_burned: [1] } }), null);
+  assert.equal(validateEpitaphRequest({ stats: { ...VALID_EPITAPH_STATS, alignment_timeline: ['böse'] } }), null);
+  assert.equal(validateEpitaphRequest({ stats: { ...VALID_EPITAPH_STATS, started_at: '' } }), null);
+  assert.equal(validateEpitaphRequest({ stats: VALID_EPITAPH_STATS, session_id: '' }), null);
+});
+
+test('validateEpitaphResponse verlangt epitaph und genau 3 highlights', () => {
+  const valid = {
+    epitaph: 'Das Mandat erlosch um 14:32 Uhr, ordnungsgemäß vermerkt.',
+    highlights: ['Dümmste Verfehlung: der Koffer.', 'Zynismus: steil.', 'Todesursache: Disziplin.'],
+  };
+  assert.notEqual(validateEpitaphResponse(valid), null);
+  assert.equal(validateEpitaphResponse({ ...valid, epitaph: '' }), null);
+  assert.equal(validateEpitaphResponse({ ...valid, highlights: ['nur eins'] }), null);
+  assert.equal(validateEpitaphResponse({ ...valid, highlights: ['a', 'b', ''] }), null);
 });

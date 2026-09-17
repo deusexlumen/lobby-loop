@@ -6,6 +6,7 @@
 extends PanelContainer
 
 signal combine_attempted(item_a: String, item_b: String)
+signal case_file_toggled
 
 var _item_definitions: Array = []
 
@@ -55,11 +56,21 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	margin.add_child(column)
 
+	var header_row := HBoxContainer.new()
+	column.add_child(header_row)
+
 	var caption := Label.new()
 	caption.text = "Inventar — Konzept auf Konzept ziehen zum Kombinieren"
 	caption.add_theme_font_size_override("font_size", 12)
 	caption.add_theme_color_override("font_color", Color(0.6, 0.63, 0.7))
-	column.add_child(caption)
+	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_row.add_child(caption)
+
+	var case_button := Button.new()
+	case_button.text = "Ermittlungsstand"
+	case_button.tooltip_text = "Die Akte des GMs über dich öffnen."
+	case_button.pressed.connect(func() -> void: case_file_toggled.emit())
+	header_row.add_child(case_button)
 
 	_row = HBoxContainer.new()
 	_row.add_theme_constant_override("separation", 8)
@@ -102,4 +113,9 @@ func _tooltip_for(item_id: String) -> String:
 	var item := ContentLoader.find_item(_item_definitions, item_id)
 	if item.is_empty():
 		return item_id
-	return str(item.get("description", item_id))
+	var text := str(item.get("description", item_id))
+	# Inventar-Buff (numerisches Feld "buff" in items.json) im Tooltip sichtbar machen.
+	var buff: Variant = item.get("buff")
+	if (buff is int or buff is float) and int(buff) != 0:
+		text += "\n\nWurf-Buff: %+d" % int(buff)
+	return text

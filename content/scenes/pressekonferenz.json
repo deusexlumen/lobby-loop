@@ -1,0 +1,55 @@
+{
+  "id": "pressekonferenz",
+  "display_name": "Pressekonferenz",
+  "intro": "Die Pressekonferenz. Zwanzig Kameras, drei Mikrofone und ein Rednerpult, das vor lauter Mikrofonen kaum noch Tisch ist. Hier wird nicht gesprochen — hier wird verbreitet. Der Aktenkoffer poliert seine Griffe.",
+  "nodes": [
+    {
+      "id": "pressesprecherin",
+      "type": "npc",
+      "label": "Pressesprecherin",
+      "position": {"x": 620, "y": 240},
+      "prompt_hint": "Die Pressesprecherin. Flüstert Journalisten Dinge zu, die sie nicht wissen dürfen, und leugnet es mit derselben Atemzugstechnik. Wer sie mit dem Konzept des Schmiergelds oder einem Netzwerkfrühstück besticht, bekommt bessere Fragen zugewiesen.",
+      "default_dc": 13,
+      "fallback_dialogue": "Die Pressesprecherin lächelt professionell. 'Wir beantworten heute alle Fragen. In der Reihenfolge ihrer Ungefährlichkeit.'",
+      "absurd_actions": [
+        "Der Pressesprecherin lautlos zuzwinkern und so tun, als sei man die angekündigte Überraschung"
+      ]
+    },
+    {
+      "id": "rednerpult",
+      "type": "object",
+      "label": "Rednerpult",
+      "position": {"x": 420, "y": 420},
+      "prompt_hint": "Das Rednerpult. Hundert Jahre Politik kleben am Holz: Schweiß, Kaffee und zwei zurückgenommene Rücktritte. Wer hier mit einer kompletten Aktenlage auftritt, wackelt nicht.",
+      "default_dc": 12,
+      "fallback_dialogue": "Das Rednerpult steht stabil. Es hat schon schwerere Aussagen getragen als deine.",
+      "absurd_actions": [
+        "Am Rednerpult die eigene Presseerklärung vorlesen, bevor jemand Fragen stellen kann"
+      ]
+    },
+    {
+      "id": "fotomauer",
+      "type": "object",
+      "label": "Fotomauer",
+      "position": {"x": 900, "y": 300},
+      "prompt_hint": "Eine Wand aus Blitzlichtern und Teleobjektiven. Jede Linse ist eine Sichtlinie, die man blockieren könnte — beispielsweise mit Konfetti der Straffreiheit oder einer guten Presseerklärung.",
+      "default_dc": 11,
+      "fallback_dialogue": "Die Fotomauer blitzt. Im richtigen Licht sieht selbst ein Rücktritt wie ein Sieg aus.",
+      "absurd_actions": [
+        "Vor der Fotomauer so lange posieren, bis die Kameras wegen Akkustand aufgeben"
+      ]
+    },
+    {
+      "id": "mikrofon",
+      "type": "microphone",
+      "label": "Mikrofon",
+      "position": {"x": 440, "y": 390},
+      "prompt_hint": "Das Mikrofon am Pult. Es ist mit drei Sendern verbandelt und mit keinem davon verheiratet — ideal, um eine Erklärung zu geben, die überall ankommt und nirgends haftet.",
+      "default_dc": 14,
+      "fallback_dialogue": "Das Mikrofon fiept leise. Es hat deine letzte drei Sätze schon als Zitat vorverdaut."
+    }
+  ],
+  "exits": [
+    {"to": "fraktionssitzung", "label": "Zur Fraktionssitzung", "position": {"x": 100, "y": 600}}
+  ]
+}

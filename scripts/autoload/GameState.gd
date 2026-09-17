@@ -18,6 +18,12 @@ var current_scene := "kommunalpolitik"
 var flags := {}
 var minigame := {"round": 0, "won_rounds": 0, "lost_rounds": 0}
 
+## Laufende Run-Statistik (Würfe, Events, Verläufe) — Sitzungsdaten, nicht im Savegame.
+var run_stats := RunStats.new()
+
+## Gesicherte Akte des zuletzt verlorenen Runs (Perma-Death) für den Karriere-Akte-Screen.
+var last_run_stats := {}
+
 ## Statischer Charakterbogen-Bonus, immer aktiv.
 var character_bonus := {"source": "berufspolitischer_bonus", "value": 3}
 
@@ -59,13 +65,17 @@ func modify_stat(stat: String, delta: int) -> void:
 		_:
 			push_warning("GameState: unbekannter Stat '%s' (delta %d ignoriert)." % [stat, delta])
 			return
+	run_stats.record_stat_snapshot(alignment_score, fraktionsdisziplin)
 	stats_changed.emit()
 	if StatRules.is_perma_death(fraktionsdisziplin):
 		_trigger_perma_death()
 
 
 func _trigger_perma_death() -> void:
+	# Akte sichern, BEVOR der Stand zurückgesetzt wird (der Screen liest last_run_stats).
+	last_run_stats = get_run_stats()
 	var fresh: Dictionary = SaveManager.perma_death()
+	run_stats = RunStats.new()
 	load_from_dict(fresh)
 	perma_death.emit()
 
@@ -103,7 +113,26 @@ func get_roll_bonuses(item_definitions: Array = []) -> Array:
 # ---------------------------------------------------------------- Events
 
 func apply_trigger_event(event: Variant) -> bool:
+	if EventApplier.is_valid(event):
+		run_stats.record_event(event)
 	return EventApplier.apply(event, self)
+
+
+# ---------------------------------------------------------------- Run-Statistik
+
+## Nimmt ein Wurf-Ergebnis auf (wird von main.gd ans DiceRoller-Signal gehängt).
+func record_roll(roll: Dictionary) -> void:
+	run_stats.record_roll(roll)
+
+
+## Kompakte Akte des aktuellen Runs für Karriere-Akte und Ermittlungsstand.
+func get_run_stats() -> Dictionary:
+	var stats := run_stats.to_dict()
+	stats["minigame"] = minigame.duplicate()
+	stats["alignment_score"] = alignment_score
+	stats["fraktionsdisziplin"] = fraktionsdisziplin
+	stats["current_scene"] = current_scene
+	return stats
 
 
 # ---------------------------------------------------------------- (De)Serialisierung

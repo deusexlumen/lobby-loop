@@ -27,6 +27,10 @@ const mockHandlers = (overrides: Partial<GmHandlers> = {}): GmHandlers => ({
     phrases: ['eins', 'zwei', 'drei'],
   }),
   minigameJudge: async () => ({ correct: true, correct_index: 0, commentary: 'Unangreifbar.' }),
+  epitaph: async () => ({
+    epitaph: 'Mandat erloschen. Die Akte ist zu.',
+    highlights: ['eins', 'zwei', 'drei'],
+  }),
   ...overrides,
 });
 
@@ -209,6 +213,92 @@ test('LLM-Ausfall → 503 mit fallback-Flag', async () => {
     const payload = (await res.json()) as { error: string; fallback: boolean };
     assert.equal(payload.fallback, true);
     assert.match(payload.error, /ungültig/);
+  } finally {
+    server.close();
+  }
+});
+
+const VALID_EPITAPH_BODY = {
+  session_id: 'savegame_1',
+  stats: {
+    rolls: [{ dice: 'W20', value: 3, total: 3, difficulty_class: 14, success: false }],
+    items_burned: ['schwarzer_koffer'],
+    minigame: { won: 1, lost: 3 },
+    alignment_timeline: [0, -4, -9],
+    started_at: '2026-09-17T10:00:00.000Z',
+  },
+};
+
+test('POST /run/epitaph — Happy Path mit Karriere-Akte', async () => {
+  const { server, baseUrl } = await startServer(mockHandlers());
+  try {
+    const res = await post(baseUrl, '/run/epitaph', VALID_EPITAPH_BODY);
+    assert.equal(res.status, 200);
+    const payload = (await res.json()) as { epitaph: string; highlights: string[] };
+    assert.match(payload.epitaph, /Akte/);
+    assert.equal(payload.highlights.length, 3);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /run/epitaph — ungültige Stats → 400', async () => {
+  const { server, baseUrl } = await startServer(mockHandlers());
+  try {
+    const res = await post(baseUrl, '/run/epitaph', { stats: { rolls: 'kaputt' } });
+    assert.equal(res.status, 400);
+    const payload = (await res.json()) as { error: string };
+    assert.match(payload.error, /epitaph/);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /run/epitaph — LLM-Ausfall → 503 mit fallback-Flag', async () => {
+  const { server, baseUrl } = await startServer(
+    mockHandlers({
+      epitaph: async () => {
+        throw new GmUnavailableError('LLM-Antwort nach 2 Versuchen ungültig.');
+      },
+    }),
+  );
+  try {
+    const res = await post(baseUrl, '/run/epitaph', VALID_EPITAPH_BODY);
+    assert.equal(res.status, 503);
+    const payload = (await res.json()) as { fallback: boolean };
+    assert.equal(payload.fallback, true);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /gm/action toleriert optionale session_id', async () => {
+  const { server, baseUrl } = await startServer(mockHandlers());
+  try {
+    const res = await post(baseUrl, '/gm/action', {
+      player_inventory: [],
+      current_scene: 'kommunalpolitik',
+      alignment_score: 0,
+      player_input: 'Test.',
+      session_id: 'savegame_1',
+    });
+    assert.equal(res.status, 200);
+  } finally {
+    server.close();
+  }
+});
+
+test('POST /gm/action lehnt ungültige session_id ab', async () => {
+  const { server, baseUrl } = await startServer(mockHandlers());
+  try {
+    const res = await post(baseUrl, '/gm/action', {
+      player_inventory: [],
+      current_scene: 'kommunalpolitik',
+      alignment_score: 0,
+      player_input: 'Test.',
+      session_id: '',
+    });
+    assert.equal(res.status, 400);
   } finally {
     server.close();
   }

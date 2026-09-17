@@ -20,6 +20,8 @@ export interface GmActionRequest {
   alignment_score: number;
   fraktionsdisziplin?: number;
   player_input: string;
+  /** Optionaler Schlüssel für das GM-Gedächtnis (Chronik pro Spielstand). */
+  session_id?: string;
 }
 
 export interface RollBonus {
@@ -73,10 +75,32 @@ export interface MinigameJudgeResponse {
   commentary: string;
 }
 
-/** Seams des Servers: 4 Endpoints, produktionsreell per LLM, in Tests gemockt. */
+/** Seams des Servers: Endpoints, produktionsreell per LLM, in Tests gemockt. */
 export interface GmHandlers {
   action: (req: GmActionRequest) => Promise<GmResponse>;
   result: (req: GmResultRequest) => Promise<GmResponse>;
   minigameRound: (req: MinigameRoundRequest) => Promise<MinigameRoundResponse>;
   minigameJudge: (req: MinigameJudgeRequest) => Promise<MinigameJudgeResponse>;
+  epitaph: (req: EpitaphRequest) => Promise<EpitaphResponse>;
+}
+
+/** Aggregate, die der Client zur Karriere-Akte (Perma-Death/Run-Ende) sendet. */
+export interface RunStats {
+  rolls: unknown[];
+  items_burned: string[];
+  minigame: Record<string, unknown>;
+  alignment_timeline: number[];
+  started_at: string;
+}
+
+/** Request an POST /run/epitaph — satirische Karriere-Zusammenfassung. */
+export interface EpitaphRequest {
+  session_id?: string;
+  stats: RunStats;
+}
+
+/** Response von POST /run/epitaph. */
+export interface EpitaphResponse {
+  epitaph: string;
+  highlights: string[];
 }

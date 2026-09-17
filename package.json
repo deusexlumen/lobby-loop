@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.23.0",
-    "llm-router-blueprint": "file:../llm-router-blueprint"
+    "llm-router-blueprint": "file:vendor/llm-router-blueprint"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

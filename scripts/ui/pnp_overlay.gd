@@ -18,6 +18,8 @@ var _item_defs: Array = []
 var _pending_action := {}
 var _offline := false
 var _aborted := false
+# Letzte Wuerfe (max. 3) mit Bonus-Aufschluesselung, ueber Knoten hinweg bestehend.
+var _roll_history: Array = []
 
 var _title_label: Label
 var _mode_label: Label
@@ -29,6 +31,7 @@ var _absurd_box: VBoxContainer
 var _roll_button: Button
 var _dc_label: Label
 var _roll_result_label: Label
+var _history_label: Label
 var _commentary_label: Label
 var _close_button: Button
 
@@ -93,6 +96,9 @@ func _ready() -> void:
 	_dc_label = _label(roll_row, 14, Color(0.8, 0.82, 0.9))
 	_roll_result_label = _label(roll_row, 14, Color(0.95, 0.9, 0.6))
 	_roll_result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	_history_label = _label(column, 11, Color(0.5, 0.54, 0.62))
+	_history_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 
 	_commentary_label = _label(column, 14, Color(0.85, 0.9, 0.85))
 	_commentary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -198,6 +204,7 @@ func _run_flow() -> void:
 		_roll_button.disabled = true
 		roll = DiceRoller.roll_check(dc, _item_defs)
 		_roll_result_label.text = _format_roll(roll)
+	_record_roll(roll)
 
 	# 4. Ergebnis an den GM, Trigger anwenden.
 	await _finish(payload, roll)
@@ -240,12 +247,30 @@ func _show_action_response(response: Dictionary) -> void:
 
 
 func _format_roll(roll: Dictionary) -> String:
-	var parts: Array = ["W20: %d" % int(roll.get("value", 0))]
+	var parts: Array = ["%s: %d" % [str(roll.get("dice", "W20")), int(roll.get("value", 0))]]
 	for bonus in roll.get("bonuses", []):
 		if bonus is Dictionary:
 			parts.append("%+d (%s)" % [int(bonus.get("value", 0)), str(bonus.get("source", "?"))])
 	var outcome := "Erfolg" if bool(roll.get("success", false)) else "Misserfolg"
 	return "%s = %d vs DC %d → %s" % [" + ".join(parts), int(roll.get("total", 0)), int(roll.get("difficulty_class", 0)), outcome]
+
+
+## Traegt einen Wurf in die Verlaufsanzeige ein (cap 3, aeltester Wurf faellt raus).
+func _record_roll(roll: Dictionary) -> void:
+	_roll_history.append(roll.duplicate())
+	if _roll_history.size() > 3:
+		_roll_history.pop_front()
+	_update_history_label()
+
+
+func _update_history_label() -> void:
+	if _roll_history.is_empty():
+		_history_label.text = ""
+		return
+	var lines: Array = []
+	for entry in _roll_history:
+		lines.append(_format_roll(entry))
+	_history_label.text = "Wurf-Verlauf:\n" + "\n".join(lines)
 
 
 func _build_payload(player_input: String) -> Dictionary:

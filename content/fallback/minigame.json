@@ -62,6 +62,60 @@
         "Fotografien sind Auslegungssache; ein Umschlag ist behördlich genehmigungsfähig und damit unverdächtig."
       ],
       "correct_index": 2
+    },
+    {
+      "accusation": "Auf der Pressekonferenz haben Sie eine Frage zur Kaffeekasse beantwortet, die niemand gestellt hat. Warum?",
+      "phrases": [
+        "Ich habe nur vorgebeugt, und Vorsorge ist in der Verwaltung oberstes Gebot.",
+        "Die Frage stand im Raum, sie war nur noch nicht ausgesprochen — ich höre weiter als andere.",
+        "Pressekonferenzen leben von Antizipation; wer die ungestellte Frage beantwortet, kontrolliert die gestellte."
+      ],
+      "correct_index": 0
+    },
+    {
+      "accusation": "Ihre Fraktion hat einstimmig für Transparenz gestimmt. Die Sitzung war nicht beschlussfähig. Erklären Sie das.",
+      "phrases": [
+        "Einstimmigkeit ist ein Prinzip, keine Anwesenheitsfrage.",
+        "Wir stimmen immer im Geiste ab, das ist unsere verfahrensrechtliche Stärke.",
+        "Nichtbeschlussfähigkeit schützt vor vorschnellen Beschlüssen und damit vor Rechenschaft — das ist System, kein Fehler."
+      ],
+      "correct_index": 1
+    },
+    {
+      "accusation": "Sie sitzen im Aufsichtsrat einer Firma, die Sie als Ausschussmitglied überwachen. Kein Problem?",
+      "phrases": [
+        "Kontrolle und Verwaltung sind bei mir personell getrennt — je nach Stimmungslage.",
+        "Ich überwache die Firma tagsüber und verwaltete sie abends, das ist eine klare zeitliche Trennung.",
+        "Ehrenamtliche Mandatskumulierung ist zulässig, solange die Ehre größer ist als das Amt — und das prüfe ich selbst."
+      ],
+      "correct_index": 2
+    },
+    {
+      "accusation": "Ihr Wahlprogramm verspricht gleichzeitig Steuersenkungen und den Ausbau aller Dienste. Wie geht das?",
+      "phrases": [
+        "Das geht über Effizienz, und Effizienz ist das, was passiert, wenn man nicht hinschaut.",
+        "Wir finanzieren beides durch Einsparungen, die wir nach der Wahl konkretisieren werden, konkret natürlich nicht.",
+        "Ein Wahlprogramm ist ein Versprechen, und Versprechen sind bekanntlich nicht teil des Haushalts."
+      ],
+      "correct_index": 0
+    },
+    {
+      "accusation": "Zeuge, Ihre Aktenlage ist vollständig, inhaltsleer und unangreifbar. Halten Sie das für eine Verteidigung?",
+      "phrases": [
+        "Eine vollständige Aktenlage ist der höchste Stand verwaltungsrechtlicher Kunst.",
+        "Inhalt entsteht durch Lesen, und Lesen ist Sache derer, die es wagten.",
+        "Unangreifbar ist im Ausschuss das, was weder belegt noch widerlegt werden kann — das nennt man Vorsorge."
+      ],
+      "correct_index": 1
+    },
+    {
+      "accusation": "Kurz nach dem Parteispendentopf-Brunch stimmte Ihre Fraktion gegen eine Transparenz-Initiative. Zufall?",
+      "phrases": [
+        "Brunches haben keine Stimme, sie haben nur Butter — und Butter ist keine Mehrheit.",
+        "Meine Fraktion stimmt unabhängig, besonders nach gutem Frühstück.",
+        "Die Initiative war verfahrenstechnisch unausgereift, und das bemerkte meine Fraktion rein inhaltlich und vollkommen spontan."
+      ],
+      "correct_index": 2
     }
   ]
 }

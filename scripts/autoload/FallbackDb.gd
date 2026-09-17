@@ -1,6 +1,6 @@
 # PURPOSE: Offline-Fallback ueber godot-sqlite (nodes, minigame_rounds), liefert Proxy-kompatible Dictionaries.
 # ARCHITECTURE: autoload
-# DEPENDENCIES: godot-sqlite (GDExtension, Klasse SQLite), StatRules
+# DEPENDENCIES: godot-sqlite (GDExtension, Klasse SQLite), StatRules, MinigameShuffle
 # PIPELINE: runtime
 # LAST_VALIDATED: 2026-09-17
 extends Node
@@ -53,6 +53,8 @@ func get_action_fallback(scene_id: String, node_id: String) -> Dictionary:
 
 ## Minispiel-Runde (scene-agnostisch, Round-Robin ueber minigame_rounds).
 ## Liefert {"accusation", "phrases", "correct_index"}; phrases ist ein Array.
+## Die Phrasen werden pro Abruf deterministisch neu gemischt, damit der
+## korrekte Index nicht auswendig gelernt werden kann (Content hat durchgehend Index 2).
 func get_minigame_round() -> Dictionary:
 	if available:
 		var rows := _query_all("SELECT idx, accusation, phrases, correct_index FROM minigame_rounds ORDER BY idx")
@@ -61,10 +63,13 @@ func get_minigame_round() -> Dictionary:
 			_round_robin_index += 1
 			var phrases := _parse_phrases(row.get("phrases", "[]"))
 			if phrases.size() >= 2:
+				var correct_index := int(row.get("correct_index", 0))
+				var seed_material := "%s#%d" % [str(row.get("accusation", "")), _round_robin_index]
+				var shuffled: Dictionary = MinigameShuffle.shuffle_round(phrases, correct_index, seed_material)
 				return {
 					"accusation": str(row.get("accusation", "Unbekannter Vorwurf.")),
-					"phrases": phrases,
-					"correct_index": int(row.get("correct_index", 0)),
+					"phrases": shuffled["phrases"],
+					"correct_index": int(shuffled["correct_index"]),
 				}
 	return {
 		"accusation": "Herr Zeuge, stimmt es, dass Sie 'nein' gesagt haben?",

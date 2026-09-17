@@ -34,6 +34,42 @@
       "id": "eierlegendewollmilchsau",
       "display_name": "Die eierlegende Wollmilchsau",
       "description": "Das universelle Allzweck-Konzept der Kommunalpolitik. Fahrradweg, Seniorenresidenz und Golfplatz in einem Beschlusspunkt. Gelegentlich legt sie Eier."
+    },
+    {
+      "id": "schmiergeld",
+      "display_name": "Das Schmiergeld",
+      "description": "Handschlagfestes Kleingeld in konzeptioneller Form. Macht Überzeugungsarbeit spürbar leichter, weil das Gegenüber plötzlich sehr zuhören will.",
+      "buff": 2
+    },
+    {
+      "id": "netzwerkfruehstueck",
+      "display_name": "Netzwerkfrühstück",
+      "description": "Croissants, Kaffee und Vitamin B in Buffetform. Wer daran teilnimmt, gilt als informell vorgebildet und erhält +1 auf jede aufrechte Überzeugungsarbeit.",
+      "buff": 1
+    },
+    {
+      "id": "presseerklaerung",
+      "display_name": "Die Presseerklärung",
+      "description": "Ein einseitiges Dokument, das alles bedauert, nichts zugibt und trotzdem +1 auf Überzeugungswürfe gibt, weil es amtlich wirkt. Auf Papier mit Wasserzeichen: das Wasser zeichnet sofort.",
+      "buff": 1
+    },
+    {
+      "id": "wahlkampfprogramm",
+      "display_name": "Das Wahlprogramm",
+      "description": "Entsteht aus Konfetti der Straffreiheit und der eierlegenden Wollmilchsau. Verspricht alles, verbindlich und nichtig zugleich. Gibt +1 auf Überzeugungswürfe — Wähler hören nur das Versprechen, nicht die Logik.",
+      "buff": 1
+    },
+    {
+      "id": "komplette_aktenlage",
+      "display_name": "Die komplette Aktenlage",
+      "description": "Entsteht aus Gedächtnislücke und Presseerklärung: Wer nichts weiß und es schriftlich leugnet, besitzt eine Aktenlage. +2 auf Überzeugungswürfe, denn Aktenlage schlägt Faktenlage.",
+      "buff": 2
+    },
+    {
+      "id": "parteispendentopf",
+      "display_name": "Der Parteispendentopf",
+      "description": "Entsteht, wenn Schmiergeld auf Netzwerkfrühstück trifft. Eine wohlduftende Kasse mit offenem Deckel und geschlossenem Gewissen. +2 auf Überzeugungswürfe, weil der Duft von Butter und Verbundenheit verwirrt.",
+      "buff": 2
     }
   ],
   "combinations": [
@@ -48,6 +84,24 @@
       "b": "schwarzer_koffer",
       "result": "gedaechtnisluecke",
       "flavor": "Schamgrenze trifft Schwarzer Koffer: Beide heben sich gegenseitig auf, und übrig bleibt eine elegant gefaltete Gedächtnislücke."
+    },
+    {
+      "a": "eierlegendewollmilchsau",
+      "b": "konfetti_der_straffreiheit",
+      "result": "wahlkampfprogramm",
+      "flavor": "Du streust das Konfetti der Straffreiheit über die eierlegende Wollmilchsau. Was herauskommt, ist ein Wahlprogramm: Es verspricht alles, und nichts davon ist strafbar."
+    },
+    {
+      "a": "gedaechtnisluecke",
+      "b": "presseerklaerung",
+      "result": "komplette_aktenlage",
+      "flavor": "Du legst die Presseerklärung in die Gedächtnislücke. Das Resultat: eine komplette Aktenlage — formvollendet, inhaltsleer und damit unangreifbar."
+    },
+    {
+      "a": "schmiergeld",
+      "b": "netzwerkfruehstueck",
+      "result": "parteispendentopf",
+      "flavor": "Schmiergeld und Netzwerkfrühstück verbinden sich im Handumdrehen zu einem Parteispendentopf. Er duftet nach Butter, und der Deckel ist so offen wie die Frage, woher das Geld kommt."
     }
   ]
 }

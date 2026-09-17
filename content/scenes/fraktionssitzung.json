@@ -1,0 +1,55 @@
+{
+  "id": "fraktionssitzung",
+  "display_name": "Fraktionssitzung",
+  "intro": "Die Fraktionssitzung. Ein Kellerraum mit Tischdecke und Mehrheit. Hier wird abgestimmt, was man morgen vergessen hat, und geklatscht, was man gestern beschloss. Der Aktenkoffer nimmt auf Seite eins Platz.",
+  "nodes": [
+    {
+      "id": "fraktionsvorsitzende",
+      "type": "npc",
+      "label": "Fraktionsvorsitzende",
+      "position": {"x": 640, "y": 260},
+      "prompt_hint": "Die Fraktionsvorsitzende. Trägt die Mehrheit wie ein Accessoire und den Parteispendentopf wie ein Geheimnis. Wer mit Netzwerkfrühstück oder Schmiergeld-Konzepten ankommt, wird zuerst gehört, zuletzt geopfert.",
+      "default_dc": 15,
+      "fallback_dialogue": "Die Fraktionsvorsitzende tippt auf ihr Tablet. 'Reden Sie. Ich höre zu. Ich protokolliere nichts davon.'",
+      "absurd_actions": [
+        "Der Fraktionsvorsitzenden zuzustimmen, bevor sie ausgesprochen hat"
+      ]
+    },
+    {
+      "id": "beschlussprotokoll",
+      "type": "object",
+      "label": "Beschlussprotokoll",
+      "position": {"x": 380, "y": 400},
+      "prompt_hint": "Das Beschlussprotokoll der Fraktion. Jede Seite ist doppelt gedeckt: oben die offizielle Haltung, unten die Handschrift des Widerstands. Eine Gedächtnislücke passt exakt über den unteren Rand.",
+      "default_dc": 12,
+      "fallback_dialogue": "Das Protokoll riecht nach Tinte und Kompromiss. Auf Seite drei wurde 'nie' nachträglich durch 'noch nicht' ersetzt.",
+      "absurd_actions": [
+        "Im Beschlussprotokoll nachlesen, wer zuerst zugestimmt hat, und dementsprechend nachträglich dabei gewesen sein"
+      ]
+    },
+    {
+      "id": "kaffeemaschine",
+      "type": "object",
+      "label": "Kaffeemaschine",
+      "position": {"x": 150, "y": 300},
+      "prompt_hint": "Die Fraktionskaffeemaschine. Brüht seit 1987 Entscheidungen mit. Wer hier ein Netzwerkfrühstück anstößt, gilt als Teil des Kreises — der Kreis trinkt zuerst.",
+      "default_dc": 9,
+      "fallback_dialogue": "Die Kaffeemaschine gluckert. Ihr Kaffee ist heiß, schwarz und parteikonform.",
+      "absurd_actions": [
+        "Der Kaffeemaschine zuzuprosten und sie formell in die Fraktion aufzunehmen"
+      ]
+    },
+    {
+      "id": "mikrofon",
+      "type": "microphone",
+      "label": "Mikrofon",
+      "position": {"x": 640, "y": 320},
+      "prompt_hint": "Ein Mikrofon über der Fraktionstischmitte. Es dient hauptsächlich daran, Schweigen in Offiziell zu übersetzen.",
+      "default_dc": 10,
+      "fallback_dialogue": "Das Mikrofon ist ausgeschaltet. Die Fraktion schätzt das als treuester Zuhörer des Abends."
+    }
+  ],
+  "exits": [
+    {"to": "aufsichtsratssitzung", "label": "Zur Aufsichtsratssitzung", "position": {"x": 100, "y": 600}}
+  ]
+}

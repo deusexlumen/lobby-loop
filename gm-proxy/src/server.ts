@@ -1,19 +1,21 @@
 /*
- * PURPOSE: Zero-Dep-HTTP-Server (node:http) für /gm/action, /gm/result, /minigame/round, /minigame/judge
+ * PURPOSE: Zero-Dep-HTTP-Server (node:http) für /gm/action, /gm/result, /minigame/round, /minigame/judge, /run/epitaph
  * ARCHITECTURE: gm-proxy/transport
- * DEPENDENCIES: node:http, node:path, node:url, ./errors.js, ./gemini.js, ./llm-handlers.js, ./types.js, ./validate.js
+ * DEPENDENCIES: node:http, node:path, node:url, ./chronicle.js, ./errors.js, ./gemini.js, ./llm-handlers.js, ./types.js, ./validate.js
  * PIPELINE: runtime, test
  * LAST_VALIDATED: 2026-09-17
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createFileChronicleStore } from './chronicle.js';
 import { GmUnavailableError, HttpError } from './errors.js';
 import { createGeminiLlmCaller } from './gemini.js';
 import { createGmHandlers } from './llm-handlers.js';
 import type { GmHandlers } from './types.js';
 import {
   validateActionRequest,
+  validateEpitaphRequest,
   validateMinigameJudgeRequest,
   validateMinigameRoundRequest,
   validateResultRequest,
@@ -78,6 +80,11 @@ export function createGmServer(handlers: GmHandlers, log: (msg: string) => void 
       if (req === null) throw new HttpError(400, 'Ungültiger /minigame/judge-Request.');
       return handlers.minigameJudge(req);
     },
+    '/run/epitaph': async (body) => {
+      const req = validateEpitaphRequest(body);
+      if (req === null) throw new HttpError(400, 'Ungültiger /run/epitaph-Request.');
+      return handlers.epitaph(req);
+    },
   };
   return createServer(async (req, res) => {
     const method = req.method ?? 'GET';
@@ -129,7 +136,11 @@ if (isMainModule()) {
     // .env ist optional — echte Env-Variablen gelten trotzdem.
   }
   const port = Number(process.env.GM_PROXY_PORT ?? DEFAULT_PORT);
-  const server = createGmServer(createGmHandlers(createGeminiLlmCaller()), console.warn);
+  const chronicleDir = resolve(process.env.GM_CHRONICLE_DIR ?? 'gm-proxy/data/chronicles');
+  const server = createGmServer(
+    createGmHandlers(createGeminiLlmCaller(), createFileChronicleStore(chronicleDir, console.warn)),
+    console.warn,
+  );
   server.listen(port, () => {
     console.log(`[gm-proxy] LOBBY-LOOP GM-Proxy lauscht auf http://localhost:${port}`);
   });

@@ -1,0 +1,55 @@
+{
+  "id": "aufsichtsratssitzung",
+  "display_name": "Aufsichtsratssitzung",
+  "intro": "Die Aufsichtsratssitzung. Poliertes Holz, gepolsterte Stühle, ungepolsterte Honorare. Hier sitzen die Menschen, die dein Mandat nur leihweise verwalten. Der Aktenkoffer setzt sich demonstrativ auf den Freiplatz.",
+  "nodes": [
+    {
+      "id": "aufsichtsratsvorsitzender",
+      "type": "npc",
+      "label": "Aufsichtsratsvorsitzender",
+      "position": {"x": 660, "y": 250},
+      "prompt_hint": "Der Aufsichtsratsvorsitzende. Hat mehr Posten als der Tag Stunden und trotzdem immer Zeit für dich — falls du mit Parteispendentopf, Schmiergeld oder einem stimmigen Wahlprogramm ankommst.",
+      "default_dc": 16,
+      "fallback_dialogue": "Der Aufsichtsratsvorsitzende nickt wohlwollend. 'Sie haben Potenzial. Potenzial ist das, was man hat, bevor man einen Posten bekommt.'",
+      "absurd_actions": [
+        "Dem Aufsichtsratsvorsitzenden zuzwinkern und anzudeuten, man habe 'seine Zahl' gelesen"
+      ]
+    },
+    {
+      "id": "honorarliste",
+      "type": "object",
+      "label": "Honorarliste",
+      "position": {"x": 400, "y": 420},
+      "prompt_hint": "Eine offen liegende Liste von Beratungshonoraren. Die Summen sind so rund, dass sie rollen, und so rein, dass sie nicht quittiert werden müssen. Ein schwarzer Koffer fände hier Anschluss.",
+      "default_dc": 13,
+      "fallback_dialogue": "Die Honorarliste ist in einer Schrift gedruckt, die nur Vorstände lesen können: der Mittelstands-Serif.",
+      "absurd_actions": [
+        "Die Honorarliste als Leseprobe für den eigenen Lebenslauf mitgehen lassen"
+      ]
+    },
+    {
+      "id": "konferenztisch",
+      "type": "object",
+      "label": "Konferenztisch",
+      "position": {"x": 620, "y": 380},
+      "prompt_hint": "Ein Konferenztisch aus einem Stück. Geteilt wird nur die Verantwortung. Die Nussbaumplatte hat mehr Beschlüsse erlebt als das Plenum, das darauf sitzt.",
+      "default_dc": 11,
+      "fallback_dialogue": "Der Konferenztisch knarrt. Er weiß, wo er morgen steht: im Protokoll, Seite eins.",
+      "absurd_actions": [
+        "Unter dem Konferenztisch nach der letzten verantwortlichen Person suchen"
+      ]
+    },
+    {
+      "id": "mikrofon",
+      "type": "microphone",
+      "label": "Mikrofon",
+      "position": {"x": 620, "y": 300},
+      "prompt_hint": "Ein Mikrofon mit Einlassungsknopf. Es wird meist nur betätigt, um das Wort 'Zustimmung' in die Protokolle zu hauchen.",
+      "default_dc": 10,
+      "fallback_dialogue": "Das Mikrofon wartet. Es ist an Zustimmungen gewöhnt und an nichts sonst."
+    }
+  ],
+  "exits": [
+    {"to": "kommunalpolitik", "label": "Zurück in die Kommune", "position": {"x": 100, "y": 600}}
+  ]
+}

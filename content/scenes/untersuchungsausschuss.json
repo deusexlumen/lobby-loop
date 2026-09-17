@@ -59,6 +59,7 @@
     }
   ],
   "exits": [
-    {"to": "kommunalpolitik", "label": "Zurück in die Kommune", "position": {"x": 100, "y": 600}}
+    {"to": "kommunalpolitik", "label": "Zurück in die Kommune", "position": {"x": 100, "y": 600}},
+    {"to": "pressekonferenz", "label": "Zur Pressekonferenz", "position": {"x": 1180, "y": 600}}
   ]
 }

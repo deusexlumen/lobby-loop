@@ -6,6 +6,8 @@
  * LAST_VALIDATED: 2026-09-17
  */
 import type {
+  EpitaphRequest,
+  EpitaphResponse,
   GmActionRequest,
   GmResponse,
   GmResultRequest,
@@ -72,6 +74,10 @@ export function validateActionRequest(body: unknown): GmActionRequest | null {
   if (body.fraktionsdisziplin !== undefined) {
     if (!isFiniteNumber(body.fraktionsdisziplin)) return null;
     req.fraktionsdisziplin = body.fraktionsdisziplin;
+  }
+  if (body.session_id !== undefined) {
+    if (!isNonEmptyString(body.session_id)) return null;
+    req.session_id = body.session_id;
   }
   return req;
 }
@@ -170,4 +176,38 @@ export function validateMinigameJudgeResponse(body: unknown): MinigameJudgeRespo
     correct_index: body.correct_index,
     commentary: body.commentary,
   };
+}
+
+/** /run/epitaph-Request — Statistiken werden grob geprüft, Inhalte bleiben opak (LLM verdaut sie). */
+export function validateEpitaphRequest(body: unknown): EpitaphRequest | null {
+  if (!isRecord(body)) return null;
+  if (!isRecord(body.stats)) return null;
+  if (!Array.isArray(body.stats.rolls)) return null;
+  if (!isStringArray(body.stats.items_burned)) return null;
+  if (!isRecord(body.stats.minigame)) return null;
+  if (!Array.isArray(body.stats.alignment_timeline)) return null;
+  if (!body.stats.alignment_timeline.every((v) => isFiniteNumber(v))) return null;
+  if (!isNonEmptyString(body.stats.started_at)) return null;
+  const req: EpitaphRequest = {
+    stats: {
+      rolls: body.stats.rolls,
+      items_burned: body.stats.items_burned,
+      minigame: body.stats.minigame,
+      alignment_timeline: body.stats.alignment_timeline,
+      started_at: body.stats.started_at,
+    },
+  };
+  if (body.session_id !== undefined) {
+    if (!isNonEmptyString(body.session_id)) return null;
+    req.session_id = body.session_id;
+  }
+  return req;
+}
+
+export function validateEpitaphResponse(body: unknown): EpitaphResponse | null {
+  if (!isRecord(body)) return null;
+  if (!isNonEmptyString(body.epitaph)) return null;
+  if (!Array.isArray(body.highlights) || body.highlights.length !== 3) return null;
+  if (!body.highlights.every((line) => isNonEmptyString(line))) return null;
+  return { epitaph: body.epitaph, highlights: [...body.highlights] };
 }

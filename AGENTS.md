@@ -4,15 +4,15 @@
 
 **LOBBY-LOOP** ist ein digitales Point-and-Click-RPG mit politisch-satirischem Setting (Lobbyismus, Untersuchungsausschuss, Kommunalpolitik). Das Kernstück ist ein KI-Game-Master (LLM), der als System-Entität agiert, die Spielwelt aktiv manipuliert und jede Spieleraktion bewertet.
 
-**Aktueller Stand:** Das Projekt befindet sich im Spezifikationsstadium. Die einzige vorhandene Datei ist `LOBBY-LOOP.md` (die vollständige System-Spezifikation, auf Deutsch). Es gibt noch **keinen Code, keine Godot-Projektdateien, keine Build-Konfiguration und keine Tests**. Bei der Umsetzung gilt diese Spezifikation als verbindliche Referenz — Abweichungen nur nach Rücksprache.
+**Aktueller Stand:** Playable Skeleton. Godot-4-Client mit komplettem Kern-Loop (Szenen → Hotspots → GM-Bewertung → W20 mit Boni → Events → Inventar-Kombis → Beleidigungsfechten → Perma-Death), GM-Proxy (Node/TS, `localhost:8787`, Gemini via `llm-router-blueprint` — gevendort unter `vendor/`), SQLite-Fallback (compiliert aus `content/`-JSON, ADR-0002), GM-Gedächtnis-Chronik pro Session (ADR-0004) und Karriere-Akte bei Perma-Death (ADR-0005). Die verbindliche Referenz bleibt `LOBBY-LOOP.md` inkl. Implementierungs-Anhang. Strategie-Doku: `.claude/docs/ai/lobby-loop/10x/`.
 
-## Technologie-Stack (geplant, laut Spezifikation)
+## Technologie-Stack
 
 - **Engine:** Godot 4.x — nativer 2D-Support, externe API-Aufrufe direkt über `HTTPRequest`-Nodes.
-- **Skriptsprache:** GDScript (Idiom der Engine, noch nicht im Projekt vorhanden).
-- **LLM-Anbindung:** REST-API, ausschließlich strukturierte JSON-Payloads in beide Richtungen (kein String-Parsing).
-- **Fallback:** Lokale SQLite-Datenbank mit hartcodierten Dialogbäumen und Standard-DCs (Difficulty Classes), aktiv bei API-Timeouts oder Verbindungsabbrüchen.
-- **Persistenz:** Spielstand wird lokal gespeichert; Perma-Death löscht den Spielstand irreversibel (Kernechanik, kein Bug).
+- **Skriptsprache:** GDScript (Client), TypeScript (GM-Proxy + Tools, `tsx`).
+- **LLM-Anbindung:** REST-API über den lokalen GM-Proxy, ausschließlich strukturierte JSON-Payloads in beide Richtungen (kein String-Parsing); `session_id` pro Savegame koppelt Chronik und Karriere-Akte.
+- **Fallback:** Lokale SQLite-Datenbank mit hartcodierten Dialogbäumen und Standard-DCs (Difficulty Classes), aktiv bei API-Timeouts oder Verbindungsabbrüchen; Minigame-Fallback-Runden werden clientseitig deterministisch permutiert.
+- **Persistenz:** Spielstand als JSON in `user://`; Perma-Death löscht den Spielstand irreversibel (Kernechanik, kein Bug).
 
 ## Architektur-Kontrakte (aus der Spezifikation)
 
@@ -49,11 +49,14 @@ Diese Schnittstellen sind fest definiert und müssen bei der Implementierung exa
 
 ## Build- und Test-Prozess
 
-Noch nicht eingerichtet. Bei Beginn der Implementierung sind anzulegen:
+Eingerichtet und grün:
 
-- Godot-Projektstruktur (`project.godot`) im Repo-Root.
-- Build/Export über die Godot-CLI oder den Godot-Editor (Export-Presets definieren).
-- Teststrategie: Godot-Unit-Tests für reine Logik (Wurf-Boni, DC-Vergleich, Inventar-Kombinationen); Integrations-Test für den JSON-Request/Response-Zyklus inkl. SQLite-Fallback-Pfad.
+- `pnpm install` — Vendored Dependency (`vendor/llm-router-blueprint`, ADR-0006), kein Sibling-Repo nötig.
+- `pnpm run proxy:dev` — GM-Proxy auf `localhost:8787`.
+- `pnpm run build:fallback` — compiliert `content/`-JSON → `data/fallback.sqlite`.
+- `pnpm test` — Proxy-Suites (`node:test`) + Tools-Suites; `pnpm run typecheck` — `tsc`.
+- GUT (Godot): `<godot-binary> --headless -s addons/gut/gut_cmdln.gd -gdir=res://test/gut -gexit` — Unit-Tests für reine Logik (Wurf, Stats, Kombinationen, Shuffle, Run-Stats, Epitaph).
+- Godot-Export über die Editor-Export-Presets (noch nicht definiert).
 
 ## Konventionen
 

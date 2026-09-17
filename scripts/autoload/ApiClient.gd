@@ -1,12 +1,13 @@
 # PURPOSE: REST-Client fuer den gm-proxy (4 Endpoints), asynchron, 15s-Timeout, liefert Dictionary oder null.
 # ARCHITECTURE: autoload
-# DEPENDENCIES: none
+# DEPENDENCIES: SaveData
 # PIPELINE: runtime
 # LAST_VALIDATED: 2026-09-17
 extends Node
 
 const BASE_URL := "http://localhost:8787"
 const REQUEST_TIMEOUT := 15.0
+const SESSION_FALLBACK := "anonymous"
 
 signal request_failed(endpoint: String)
 
@@ -33,14 +34,24 @@ func minigame_judge(payload: Dictionary) -> Variant:
 	return await _post("/minigame/judge", payload, ["correct", "correct_index"])
 
 
+## Session-Kennung fuer die GM-Chronik: Savegame-Name ohne Pfad/Endung, sonst "anonymous".
+static func session_id() -> String:
+	if not SaveData.has_save():
+		return SESSION_FALLBACK
+	var name := SaveData.SAVE_PATH.get_file().get_basename()
+	return name if not name.is_empty() else SESSION_FALLBACK
+
+
 func _post(path: String, payload: Dictionary, required_keys: Array) -> Variant:
 	var http := HTTPRequest.new()
 	http.timeout = REQUEST_TIMEOUT
 	# Auch bei pausiertem Szenenbaum muss die Antwort ankommen.
 	http.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(http)
+	var request_body := payload.duplicate()
+	request_body["session_id"] = session_id()
 	var headers := ["Content-Type: application/json"]
-	var error := http.request(BASE_URL + path, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
+	var error := http.request(BASE_URL + path, headers, HTTPClient.METHOD_POST, JSON.stringify(request_body))
 	if error != OK:
 		http.queue_free()
 		request_failed.emit(path)

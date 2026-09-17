@@ -41,3 +41,12 @@ Dir wird das Wurfergebnis übergeben (Augenzahl, Boni, Total, DC, Erfolg). Komme
 ## Beleidigungsfechten (Minispiel)
 
 Generiere Vorwürfe des Ermittlungsführers und drei PR-Phrasen. Die korrekte Antwort ist stets die Phrase, die **inhaltlich am wenigsten Sinn ergibt, aber politisch unangreifbar** ist (Verweis auf Regelwerk, Definitionen, Ausschuss-Mandate, formale Nichtzuständigkeit). Beim Richten: `correct` (boolean), `correct_index` (0–2) und eine kurze satirische `commentary`.
+
+## Gedächtnis (Chronik)
+
+Dir wird gelegentlich eine **Chronik früherer, validierter Ereignisse**
+übergeben — ausschließlich Fakten aus früheren bewerteten Aktionen und
+Würfelergebnissen. Nutze sie für Rückbezug: Wiederholungen erkennen,
+Running Gags aufgreifen, Verrat vermerken ("Das ist bereits das zweite Mal,
+dass ein Koffer bei Ihnen 'verlegt' wird."). Wenn keine Chronik übergeben
+wird, ist der Antragsteller schlicht noch nicht aufgefallen.

@@ -9,6 +9,7 @@ const InventoryBarScript := preload("res://scripts/ui/inventory_bar.gd")
 const PnpOverlayScript := preload("res://scripts/ui/pnp_overlay.gd")
 const MinigamePanelScript := preload("res://scripts/ui/minigame_panel.gd")
 const BriefcaseScript := preload("res://scripts/ui/briefcase.gd")
+const CaseFilePanelScript := preload("res://scripts/ui/case_file_panel.gd")
 
 const HEADER_HEIGHT := 100
 const NODE_COLORS := {
@@ -27,11 +28,14 @@ var _intro_label: Label
 var _stats_label: Label
 var _room_area: Control
 var _inventory_bar: PanelContainer
+var _case_file: PanelContainer
 var _overlay: PanelContainer
 var _minigame: PanelContainer
 var _briefcase: Control
 var _toast: Label
 var _perma_screen: PanelContainer
+var _epitaph_label: Label
+var _highlights_label: Label
 
 
 func _ready() -> void:
@@ -85,6 +89,9 @@ func _build_ui() -> void:
 	_briefcase = BriefcaseScript.new()
 	add_child(_briefcase)
 
+	_case_file = CaseFilePanelScript.new()
+	add_child(_case_file)
+
 	_overlay = PnpOverlayScript.new()
 	add_child(_overlay)
 
@@ -134,6 +141,23 @@ func _build_perma_screen() -> PanelContainer:
 	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(text)
 
+	_epitaph_label = Label.new()
+	_epitaph_label.text = "Die Akte wird gefertigt …"
+	_epitaph_label.add_theme_font_size_override("font_size", 13)
+	_epitaph_label.add_theme_color_override("font_color", Color(0.75, 0.72, 0.55))
+	_epitaph_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_epitaph_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_epitaph_label.custom_minimum_size = Vector2(560, 0)
+	column.add_child(_epitaph_label)
+
+	_highlights_label = Label.new()
+	_highlights_label.add_theme_font_size_override("font_size", 12)
+	_highlights_label.add_theme_color_override("font_color", Color(0.6, 0.63, 0.7))
+	_highlights_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_highlights_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_highlights_label.custom_minimum_size = Vector2(560, 0)
+	column.add_child(_highlights_label)
+
 	var button := Button.new()
 	button.text = "Neustart in der Kommunalpolitik"
 	button.pressed.connect(func() -> void:
@@ -152,16 +176,22 @@ func _load_content() -> void:
 		_items_data["combinations"] = FallbackDb.get_combinations()
 	_inventory_bar.set_item_definitions(_items_data["items"])
 	_inventory_bar.refresh()
+	_case_file.set_item_definitions(_items_data["items"])
 
 
 func _connect_signals() -> void:
 	GameState.inventory_changed.connect(_inventory_bar.refresh)
+	GameState.inventory_changed.connect(_case_file.refresh)
 	GameState.stats_changed.connect(_update_stats_label)
+	GameState.stats_changed.connect(_case_file.refresh)
 	GameState.scene_changed.connect(_on_scene_changed)
 	GameState.minigame_requested.connect(_on_minigame_requested)
 	GameState.perma_death.connect(_on_perma_death)
 	_inventory_bar.combine_attempted.connect(_on_combine_attempted)
+	_inventory_bar.case_file_toggled.connect(_case_file.toggle)
 	_overlay.action_finished.connect(func() -> void: SaveManager.autosave())
+	# Würfe landen in der Run-Statistik (Akten-Grundlage).
+	DiceRoller.roll_performed.connect(GameState.record_roll)
 
 
 # ---------------------------------------------------------------- Raum
@@ -247,7 +277,43 @@ func _on_minigame_requested() -> void:
 func _on_perma_death() -> void:
 	_overlay.abort()
 	_minigame.abort()
+	_case_file.visible = false
+	_epitaph_label.text = "Die Akte wird gefertigt …"
+	_highlights_label.text = ""
 	_perma_screen.visible = true
+	_request_epitaph()
+
+
+## Karriere-Akte vom GM anfordern (POST /run/epitaph); bei jedem Fehler lokaler Fallback.
+func _request_epitaph() -> void:
+	var stats: Dictionary = GameState.last_run_stats
+	var payload := {
+		"session_id": _session_id(),
+		"stats": stats,
+	}
+	# ApiClient._post ist die bestehende generische POST-Hilfe (kein eigener HTTP-Code).
+	var response: Variant = await ApiClient._post("/run/epitaph", payload, ["epitaph"])
+	if response is Dictionary:
+		_show_epitaph(str(response.get("epitaph", "")), response.get("highlights", []))
+	else:
+		# Endpoint down, 503 oder ungueltig: amtliche Akte lokal fertigen.
+		var local: Dictionary = EpitaphGenerator.generate(stats)
+		_show_epitaph(str(local.get("epitaph", "")), local.get("highlights", []))
+
+
+func _show_epitaph(epitaph: String, highlights: Variant) -> void:
+	_epitaph_label.text = epitaph
+	var lines: Array = []
+	if highlights is Array:
+		for highlight in highlights:
+			lines.append("• %s" % str(highlight))
+	_highlights_label.text = "\n".join(lines)
+
+
+func _session_id() -> String:
+	# Dieselbe Konvention wie ApiClient (Savegame-Name), damit Chronik und
+	# Karriere-Akte auf derselben Session liegen.
+	return ApiClient.session_id()
 
 
 func _on_combine_attempted(item_a: String, item_b: String) -> void:

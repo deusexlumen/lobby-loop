@@ -3,6 +3,7 @@ dist/
 
 # Laufzeit-Artefakte des GM-Proxy
 gm-proxy/router-state.json
+gm-proxy/data/
 
 # Lokale Umgebungsvariablen
 .env
@@ -21,3 +22,6 @@ kimi-debug-session_*.zip
 addons/godot-sqlite/bin/*
 !addons/godot-sqlite/bin/libgdsqlite.windows.template_debug.x86_64.dll
 !addons/godot-sqlite/bin/libgdsqlite.windows.template_release.x86_64.dll
+
+# Vendored llm-router-blueprint (dist/ wird oben global ignoriert, hier benötigt)
+!vendor/llm-router-blueprint/dist/
