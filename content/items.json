@@ -1,0 +1,53 @@
+{
+  "items": [
+    {
+      "id": "unschuldsvermutung",
+      "display_name": "Die Unschuldsvermutung",
+      "description": "Eine reinweiße Weste. Laut Grundgesetz unantastbar, in der Praxis grob gestrickt. Schimmert bei Nässe leicht strafrechtlich."
+    },
+    {
+      "id": "schredder",
+      "display_name": "Der Schredder",
+      "description": "Umgebungsobjekt im Vorraum des Ausschusssaals — nicht tragbar, aber im Inventar als Konzept verankert. Offiziell für Altakten. Offiziell."
+    },
+    {
+      "id": "konfetti_der_straffreiheit",
+      "display_name": "Konfetti der Straffreiheit",
+      "description": "Entsteht, wenn man die Unschuldsvermutung durch den Schredder zieht. Ein Papierregen, unter dem sich niemand mehr an irgendetwas erinnern kann — ideal gegen Presse-Sichtlinien."
+    },
+    {
+      "id": "schwarzer_koffer",
+      "display_name": "Schwarzer Koffer",
+      "description": "Ein Koffer ohne Schild, ohne Rechnung und ohne schlechtes Gewissen. Enthält 'Beratungshonorare', die so rein sind, dass sie nicht mal quittiert werden müssen."
+    },
+    {
+      "id": "gedaechtnisluecke",
+      "display_name": "Gedächtnislücke",
+      "description": "Eine handliche Erinnerungslücke im Format DIN A4. Wirft man sie geschickt ein, kann man unter Eid Dinge nicht wissen, die man gerade tut."
+    },
+    {
+      "id": "schamgrenze",
+      "display_name": "Die Schamgrenze",
+      "description": "Ein Relikt aus früheren Legislaturperioden. Niemand im Haus weiß mehr genau, wozu sie gut war, aber sie wirkt beruhigend dekorativ."
+    },
+    {
+      "id": "eierlegendewollmilchsau",
+      "display_name": "Die eierlegende Wollmilchsau",
+      "description": "Das universelle Allzweck-Konzept der Kommunalpolitik. Fahrradweg, Seniorenresidenz und Golfplatz in einem Beschlusspunkt. Gelegentlich legt sie Eier."
+    }
+  ],
+  "combinations": [
+    {
+      "a": "unschuldsvermutung",
+      "b": "schredder",
+      "result": "konfetti_der_straffreiheit",
+      "flavor": "Du ziehst die Unschuldsvermutung durch den Schredder. Aus dem weißen Stoff wird Konfetti der Straffreiheit — ein Festtag für die Justizgeschichte."
+    },
+    {
+      "a": "schamgrenze",
+      "b": "schwarzer_koffer",
+      "result": "gedaechtnisluecke",
+      "flavor": "Schamgrenze trifft Schwarzer Koffer: Beide heben sich gegenseitig auf, und übrig bleibt eine elegant gefaltete Gedächtnislücke."
+    }
+  ]
+}

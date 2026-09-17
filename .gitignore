@@ -1,0 +1,23 @@
+node_modules/
+dist/
+
+# Laufzeit-Artefakte des GM-Proxy
+gm-proxy/router-state.json
+
+# Lokale Umgebungsvariablen
+.env
+
+# Godot Import-Cache
+.godot/
+
+# GUT-Demo-Müll (quarantäniert, .gdignore)
+addons/gut/_repo/
+
+# Kimi-Debug-Session-Dumps
+kimi-debug-session_*.zip
+
+# godot-sqlite Plattform-Binaries (werden nicht versioniert;
+# Windows-DLLs bleiben im Repo, Rest ggf. aus Release neu laden)
+addons/godot-sqlite/bin/*
+!addons/godot-sqlite/bin/libgdsqlite.windows.template_debug.x86_64.dll
+!addons/godot-sqlite/bin/libgdsqlite.windows.template_release.x86_64.dll

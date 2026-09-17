@@ -1,0 +1,64 @@
+{
+  "id": "untersuchungsausschuss",
+  "display_name": "Untersuchungsausschuss",
+  "intro": "Der Untersuchungsausschuss. Fluoreszenzlicht, Protokollführer, und ein Ermittlungsführer, der noch nie ein Verbrechen gesehen hat, das ihm nicht gefallen hätte. Der Aktenkoffer flattert aufgeregt.",
+  "nodes": [
+    {
+      "id": "ermittlungsfuehrer",
+      "type": "npc",
+      "label": "Ermittlungsführer",
+      "position": {"x": 640, "y": 260},
+      "prompt_hint": "Der Ermittlungsführer des Untersuchungsausschusses. Verhört den Spieler im Kreuzverhör. Interaktion startet das Beleidigungsfechten (trigger_event start_minigame).",
+      "default_dc": 14,
+      "fallback_dialogue": "Der Ermittlungsführer klopft auf sein Protokoll. 'Zeuge, ich empfehle Ihnen, heute besonders unschuldig zu wirken.'",
+      "absurd_actions": [
+        "Dem Ermittlungsführer freundlich zunicken und das Protokollbuch umdrehen"
+      ]
+    },
+    {
+      "id": "schredder",
+      "type": "object",
+      "label": "Schredder",
+      "position": {"x": 880, "y": 420},
+      "prompt_hint": "Ein industrieller Schredder im Vorraum des Ausschusssaal. Offiziell für 'Altakten'. Unoffiziell für alles, was je einem jemand unter Eid gesagt hat.",
+      "default_dc": 11,
+      "fallback_dialogue": "Der Schredder röchelt. Er hat heute schon zwei Aussagen verdaut und hat noch Platz.",
+      "absurd_actions": [
+        "Eine eigene Aussage im Vorbeigehen schreddern"
+      ]
+    },
+    {
+      "id": "mikrofon",
+      "type": "microphone",
+      "label": "Mikrofon",
+      "position": {"x": 420, "y": 340},
+      "prompt_hint": "Das Mikrofon vor der Zeugenbank. Alles, was hier gesagt wird, geht live. Perfekt für Geständnisse, die man später als 'entnommen' bezeichnen kann.",
+      "default_dc": 13,
+      "fallback_dialogue": "Das Mikrofon leuchtet rot. Es hat gelernt, zwischen 'unter Eid' und 'unter vier Augen' zu unterscheiden."
+    },
+    {
+      "id": "presse",
+      "type": "npc",
+      "label": "Pressekorrespondenten",
+      "position": {"x": 180, "y": 220},
+      "prompt_hint": "Eine Meute Pressekorrespondenten mit Kameras und unangenehm scharfen Sichtlinien. Ideales Ziel für Konfetti der Straffreiheit, um ihre Line of Sight dauerhaft zu blockieren.",
+      "default_dc": 10,
+      "fallback_dialogue": "Die Presse nickt freundlich. Sie warten nur darauf, dass du einen Satz sagst, den du nicht zurücknehmen kannst.",
+      "absurd_actions": [
+        "Konfetti der Straffreiheit den Pressekorrespondenten ins Gesicht werfen"
+      ]
+    },
+    {
+      "id": "protokollbuch",
+      "type": "object",
+      "label": "Protokollbuch",
+      "position": {"x": 540, "y": 480},
+      "prompt_hint": "Das Protokollbuch des Ausschusses. Enthält auf Seite 47 eine handschriftliche Notiz: 'Was wusste der Zeuge? Vorher fragen, ob er es weiß.'",
+      "default_dc": 12,
+      "fallback_dialogue": "Das Protokollbuch ist bis Seite 46 absolut wasserdicht. Ab Seite 47 fängt das Wasser an."
+    }
+  ],
+  "exits": [
+    {"to": "kommunalpolitik", "label": "Zurück in die Kommune", "position": {"x": 100, "y": 600}}
+  ]
+}

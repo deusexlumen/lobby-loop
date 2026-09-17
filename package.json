@@ -1,0 +1,27 @@
+{
+  "name": "lobby-loop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LOBBY-LOOP — LLM-GM-Proxy, Fallback-Compiler und Content fuer das politisch-satirische Point-and-Click-RPG.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "proxy:dev": "tsx gm-proxy/src/server.ts",
+    "build:fallback": "tsx tools/compile-fallback.ts",
+    "test": "pnpm run test:proxy && pnpm run test:tools",
+    "test:proxy": "tsx --test \"gm-proxy/tests/*.test.ts\"",
+    "test:tools": "tsx --test \"tools/tests/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@google/genai": "^2.23.0",
+    "llm-router-blueprint": "file:../llm-router-blueprint"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

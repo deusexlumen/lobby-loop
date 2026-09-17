@@ -1,0 +1,67 @@
+{
+  "rounds": [
+    {
+      "accusation": "Herr Zeuge, stimmt es, dass Sie die Baugenehmigung für Ihren Schwager eigenhändig und zackig unterschrieben haben?",
+      "phrases": [
+        "Das war ein Versehen der Verwaltung, ich unterschreibe alles, was mir unter die Tür durchgeht.",
+        "Ich kenne meinen Schwager nicht persönlich, nur geschäftlich und bei Familienfesten.",
+        "Familie ist im Kommunalrecht definitionsgemäß kein verwaltungsrechtlicher Begriff."
+      ],
+      "correct_index": 2
+    },
+    {
+      "accusation": "Belegen lässt sich, dass der neue Fahrradweg exakt an drei Ihrer Grundstücke vorbeiführt. Zufall?",
+      "phrases": [
+        "Der Fahrradweg folgt einer Vision, keine Karte.",
+        "Ich besitze gar keine Grundstücke, nur langfristige Flächenbindungen.",
+        "Der Radweg ist ein Sieg der Verkehrswende und wurde von einer unabhängigen Gremium-Enquete getragen."
+      ],
+      "correct_index": 2
+    },
+    {
+      "accusation": "In Ihrem schwarzen Koffer fanden sich fünfstellige 'Beratungshonorare'. Ohne Rechnung. Ohne Beratung?",
+      "phrases": [
+        "Die Honorare waren so rein, dass eine Rechnung sie beschmutzt hätte.",
+        "Ich kann mich an keinen Koffer erinnern, ich erinnere mich generell schlecht an schwarze Objekte.",
+        "Transparenz ist im Lobbyregister vorgesehen, und Vorgesehenes ist im Wesentlichen erledigt."
+      ],
+      "correct_index": 2
+    },
+    {
+      "accusation": "Sie haben ein Protokoll des Ausschusses geschreddert. Während der Sitzung. Vor laufender Kamera.",
+      "phrases": [
+        "Der Schredder hat das Protokoll selbstständig und ohne meine Kenntnis zerfetzt.",
+        "Das geschredderte Dokument war kein Original, sondern eine besonders verdächtige Kopie.",
+        "Altaktenvernichtung ist eine verwaltungsinterne Routine, für die der Ausschuss kein Mandat benötigt."
+      ],
+      "correct_index": 2
+    },
+    {
+      "accusation": "Ihr Verein erhielt kurz nach Ihrem Amtsantritt eine Spende in Höhe Ihrer genauen Kontostandlücke. Erklären Sie das.",
+      "phrases": [
+        "Die Spende war ein Zeichen allgemeiner Wertschätzung und hat mit meinem Konto rein gar nichts zu tun.",
+        "Vereinsspenden sind Ehrensache, und Ehrensachen prüft man bekanntlich nicht nach.",
+        "Parteispenden sind gesetzlich gedeckelt, und Vereinsspenden sind eine andere Gesetzesseite."
+      ],
+      "correct_index": 2
+    },
+    {
+      "accusation": "Zeuge, Sie haben unter Eid ausgesagt, Sie seien an jenem Abend 'irgendwo'. Wo genau war das 'irgendwo'?",
+      "phrases": [
+        "'Irgenwo' ist ein Ort mit einer langen Verwaltungstradition, jeder Kommunalpolitiker kennt ihn.",
+        "Ich war an besagtem Abend emotional abwesend, das lässt sich protokollieren.",
+        "Zeugen dürfen sich an nichts erinnern, solange die Erinnerung nicht verfestigt ist; das ist Aktenlage."
+      ],
+      "correct_index": 2
+    },
+    {
+      "accusation": "Man sieht Sie auf dem Foto deutlich, wie Sie dem Bürgermeister einen Umschlag übergeben. Was war darin?",
+      "phrases": [
+        "Ein Umschlag kann alles enthalten, außer Beweisen.",
+        "Der Bürgermeister und ich tauschen seit Jahren leere Umschläge aus, rein freundschaftlich.",
+        "Fotografien sind Auslegungssache; ein Umschlag ist behördlich genehmigungsfähig und damit unverdächtig."
+      ],
+      "correct_index": 2
+    }
+  ]
+}

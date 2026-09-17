@@ -1,0 +1,57 @@
+{
+  "id": "kommunalpolitik",
+  "display_name": "Kommunalpolitik",
+  "intro": "Willkommen in der Kommune, Mandatsträger. Hier wird noch mit Handschlag betrogen — nostalgisch, fast ehrlich. Der Aktenkoffer schwebt hinter dir her und bewertet jeden deiner Schritte.",
+  "nodes": [
+    {
+      "id": "buergermeister",
+      "type": "npc",
+      "label": "Bürgermeister",
+      "position": {"x": 400, "y": 300},
+      "prompt_hint": "Der Bürgermeister der Kommune. Liebt Grundsteuer-B-Erlasse, Rathaussanierungen und Handschläge, bei denen niemand zusieht. Kann überredet werden, Dinge zu 'vergessen'.",
+      "default_dc": 10,
+      "fallback_dialogue": "Der Bürgermeister lächelt breit. 'Im Rathaus wird nicht gelogen, mein Freund. Hier wird lediglich terminlich optimiert.'",
+      "absurd_actions": [
+        "Dem Bürgermeister die Hand schütteln und dabei den Inhalt seines Aktenordners fotografieren",
+        "Den Bürgermeister fragen, ob der neue Fahrradweg seine Schwägerin zufällig am Grundstück vorbeiführt"
+      ]
+    },
+    {
+      "id": "aktenordner",
+      "type": "object",
+      "label": "Aktenordner",
+      "position": {"x": 250, "y": 180},
+      "prompt_hint": "Ein Aktenordner voller Bauanträge. Er riecht nach Staub, Kollegialität und leicht bekleckerten Grundstücksgeschäften.",
+      "default_dc": 8,
+      "fallback_dialogue": "Der Aktenordner enthält Bauanträge, von denen jeder einzelne eigentlich drei Unterschriften mehr gebraucht hätte.",
+      "absurd_actions": [
+        "Aktenordner essen",
+        "Den Aktenordner als Beweismittel deklarieren und behalten"
+      ]
+    },
+    {
+      "id": "fahrradweg_plan",
+      "type": "object",
+      "label": "Fahrradweg-Planungskarte",
+      "position": {"x": 560, "y": 150},
+      "prompt_hint": "Eine Planungskarte des Prestige-Fahrradwegs. Die Route schlängelt sich auffällig eng an drei Grundstücke vorbei, die dem Bürgermeister 'völlig fremd' gehören.",
+      "default_dc": 12,
+      "fallback_dialogue": "Die Fahrradweg-Route folgt exakt der Grenze zwischen Idealismus und Grundbuchamt."
+    },
+    {
+      "id": "sportheim_kuendigung",
+      "type": "object",
+      "label": "Kündigung Sportheim",
+      "position": {"x": 150, "y": 420},
+      "prompt_hint": "Eine vordatierte Kündigung des Sportheims des rivalisierenden Sportvereins. Bereit unterschrieben, bereit vergessen.",
+      "default_dc": 9,
+      "fallback_dialogue": "Die Kündigung ist auf dem Briefpapier des Amtes gedruckt. Fälschung mit Hang zur Bequemlichkeit.",
+      "absurd_actions": [
+        "Die Kündigung unterschreiben und sofort 'zum Verlieren' markieren"
+      ]
+    }
+  ],
+  "exits": [
+    {"to": "untersuchungsausschuss", "label": "Nach Berlin", "position": {"x": 100, "y": 600}}
+  ]
+}

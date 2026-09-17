@@ -1,0 +1,3 @@
+# Content-JSON als Single Source of Truth mit SQLite-Compile-Schritt
+
+Szenen, Konzept-Items, die Kombinationsmatrix und die statischen Minispiel-Runden werden ausschließlich als deklaratives JSON gepflegt. Die SQLite-Fallback-Datenbank ist ein Build-Artefakt: ein Compilerskript erzeugt sie aus dem JSON, sie wird nie von Hand editiert und ist gegen Drift gefeit. Begründung: Doppelt gepflegter Content (JSON für den LLM-Kontext, SQL für den Offline-Modus) würde garantiert auseinanderlaufen; der Fallback ist aber vertraglich derselbe GM, nur statisch. Konsequenz: Wer Content ändert, ändert JSON und führt den Compile-Schritt — die Datenbank steht unter Verbots-Editierung.
