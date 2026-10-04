@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  proxy:
+    name: GM-Proxy (Tests + Typecheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g pnpm@10
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm run typecheck
+
+  godot:
+    name: Godot (GUT headless)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Godot-Binary laden
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          ./godot --headless --version
+      # .godot/ ist gitignored: ohne Import lösen sich alle class_name-Typen nicht auf.
+      - name: Projekt importieren
+        run: ./godot --headless --path . --import
+      - name: GUT
+        run: |
+          set +e
+          ./godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://test/gut -gexit 2>&1 | tee gut.log
+          status=${PIPESTATUS[0]}
+          set -e
+          # GUT liefert Exit 1 bei einem fehlschlagenden Test, aber Exit 0, wenn
+          # Skripte nicht parsen und nie ein Test startet. Beides muss rot werden.
+          if [ "$status" -ne 0 ]; then echo "::error::GUT Exit $status"; exit 1; fi
+          if grep -q "Parse Error" gut.log; then echo "::error::Parse Error im Lauf (Import vergessen?)"; exit 1; fi
+          if ! grep -q "All tests passed" gut.log; then echo "::error::Kein 'All tests passed' im Log — es lief kein Test"; exit 1; fi
+      - name: Export-Gegencheck (PCK, braucht keine Templates)
+        run: |
+          mkdir -p build
+          ./godot --headless --path . --export-pack "Windows Desktop" build/lobby-loop.pck 2>&1 | tee export.log
+          # Die Fallback-DB ist kein Ressourcen-Typ und kommt nur über den include_filter mit.
+          grep -q "Storing File: res://data/fallback.sqlite" <(sed 's/\x1b\[[0-9;]*m//g' export.log) \
+            || { echo "::error::data/fallback.sqlite fehlt im Export (include_filter?)"; exit 1; }
