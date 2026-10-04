@@ -11,6 +11,9 @@ gm-proxy/data/
 # Godot Import-Cache
 .godot/
 
+# Godot-Export-Ausgabe (export_presets.cfg ist versioniert)
+build/
+
 # GUT-Demo-Müll (quarantäniert, .gdignore)
 addons/gut/_repo/
 

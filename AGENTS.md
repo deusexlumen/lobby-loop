@@ -55,8 +55,8 @@ Eingerichtet und grün:
 - `pnpm run proxy:dev` — GM-Proxy auf `localhost:8787`.
 - `pnpm run build:fallback` — compiliert `content/`-JSON → `data/fallback.sqlite`.
 - `pnpm test` — Proxy-Suites (`node:test`) + Tools-Suites; `pnpm run typecheck` — `tsc`.
-- GUT (Godot): `<godot-binary> --headless -s addons/gut/gut_cmdln.gd -gdir=res://test/gut -gexit` — Unit-Tests für reine Logik (Wurf, Stats, Kombinationen, Shuffle, Run-Stats, Epitaph).
-- Godot-Export über die Editor-Export-Presets (noch nicht definiert).
+- GUT (Godot 4.7): erst **einmalig** `<godot-binary> --headless --path . --import`, dann `<godot-binary> --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://test/gut -gexit` — Unit-Tests für reine Logik (Wurf, Stats, Kombinationen, Shuffle, Run-Stats, Epitaph); 53 Tests / 538 Asserts, Exit 1 bei einem Fehlschlag. **Der Import ist Pflicht:** `.godot/` ist gitignored, auf einem frischen Checkout lösen sich sonst alle `class_name`-Typen nicht auf (`Identifier "SaveData" not declared`), die Autoloads laden nicht — und der Lauf endet trotzdem mit Exit 0, weil nie ein Test startet. Eine CI ohne Import meldet also grün, ohne zu testen.
+- Godot-Export: `export_presets.cfg` definiert **ein** Preset, „Windows Desktop" — nur dafür liegen godot-sqlite-Binaries im Repo (`.gitignore`), jede andere Plattform bekäme einen Build ohne funktionierende Offline-DB. `include_filter="*.sqlite"` packt `data/fallback.sqlite` mit ein; der JSON-Content kommt als importierte Ressource von selbst mit. Aus dem Build ausgeschlossen sind `gm-proxy`, `tools`, `vendor`, `docs`, `test`, `addons/gut`. Verifiziert (Godot 4.7.2): `--export-pack "Windows Desktop" build/lobby-loop.pck` packt 59 Dateien, darunter alle 8 aus `content/` und `data/`. **Nicht getestet:** ein voller Export mit Templates und ob `FallbackDb` die DB aus dem PCK öffnen kann (`DB_PATH` ist `res://`, im Export schreibgeschützt und im PCK; im Fehlerfall fällt der Client auf die generischen Offline-Antworten). Das braucht einen Probelauf des exportierten Builds.
 
 ## Konventionen
 
