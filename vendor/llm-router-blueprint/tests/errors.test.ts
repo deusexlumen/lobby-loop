@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyError } from '../src/errors.js';
+import { ContentRejectedError, classifyError } from '../src/errors.js';
 import { errorWith } from './helpers.js';
 
 test('structured status 429 classifies as quota without any message text', () => {
@@ -52,4 +52,19 @@ test('non-Error thrown values are classified via their string form', () => {
 
 test('quota wins over transient-looking text in the same message', () => {
   assert.equal(classifyError(new Error('429 RESOURCE_EXHAUSTED, backend UNAVAILABLE'))?.class, 'quota');
+});
+
+test('a content rejection is its own class, ahead of every status heuristic', () => {
+  assert.deepEqual(classifyError(new ContentRejectedError()), { class: 'content' });
+  // The caller's message may quote the rejected answer — digits in it must not
+  // turn the verdict into a quota or not-found classification.
+  assert.deepEqual(
+    classifyError(new ContentRejectedError('m1: rejected {"status":429,"code":404}')),
+    { class: 'content' },
+  );
+  // Name-only match: a duplicated module copy is not instanceof-compatible.
+  assert.deepEqual(
+    classifyError(errorWith('rejected', { name: 'ContentRejectedError' })),
+    { class: 'content' },
+  );
 });

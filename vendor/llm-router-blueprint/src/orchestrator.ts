@@ -17,6 +17,7 @@
  * requests. Length limits belong in the prompt, not in the token cap —
  * a higher budget costs nothing while answers stay short.
  */
+import { ContentRejectedError } from './errors.js';
 import {
   createKeyPoolRouter,
   maskApiKey,
@@ -65,6 +66,21 @@ export interface ExecutorRequest {
   prompt: string;
   temperature: number;
   maxTokens: number;
+  /**
+   * System-level instructions, kept apart from `prompt` so the executor can
+   * map them to its provider's dedicated slot (a system instruction, a
+   * system message). Separating them is what binds persona and output
+   * contract more firmly than prepending them to the user turn — and it
+   * keeps untrusted input out of the instruction role.
+   */
+  system?: string;
+  /**
+   * Requested response schema, passed through verbatim. Deliberately
+   * `unknown`: the shape belongs to the provider (a JSON Schema for
+   * structured output, a response_format object), and this blueprint stays
+   * provider-agnostic. The executor maps it or ignores it.
+   */
+  schema?: unknown;
 }
 
 export interface ExecutorResult {
@@ -99,6 +115,17 @@ export interface OrchestratorCallConfig {
   maxTokens?: number;
   /** Explicit model: replaces the primary, keeps the fallbacks. */
   model?: string;
+  /** System instructions — see ExecutorRequest.system. */
+  system?: string;
+  /** Requested response schema — see ExecutorRequest.schema. */
+  schema?: unknown;
+  /**
+   * Content validation. A rejected answer is not a provider failure, but it
+   * is not usable either: both paths fail over to the next candidate rather
+   * than returning it (provider chain → next provider, key-pool router →
+   * next Model×Key pair). The last candidate's rejection is thrown as a
+   * ContentRejectedError.
+   */
   validate?: (text: string) => boolean;
 }
 
@@ -150,11 +177,20 @@ export function createLLMOrchestrator<C>(deps: OrchestratorDeps<C>): LLMOrchestr
         prompt,
         temperature: config.temperature ?? 0.7,
         maxTokens: budget,
+        ...(config.system !== undefined ? { system: config.system } : {}),
+        ...(config.schema !== undefined ? { schema: config.schema } : {}),
       });
       if (res.finishReason === 'MAX_TOKENS' && attempt === 0) {
         budget = nextRetryBudget(startBudget, budgets);
         log(`[orchestrator] ${model}: answer truncated at ${startBudget} tokens (MAX_TOKENS) — one retry with ${budget}`);
         continue;
+      }
+      // Checked after the truncation retry: a budget-starved answer gets its
+      // second chance on the same pair first, and only a genuinely unusable
+      // one costs the candidate. classifyError maps this to 'content', so the
+      // router advances without locking the pair.
+      if (config.validate && !config.validate(res.text)) {
+        throw new ContentRejectedError(`${model}: answer rejected by content validation`);
       }
       return { ...res, retried: attempt > 0 };
     }
@@ -166,6 +202,8 @@ export function createLLMOrchestrator<C>(deps: OrchestratorDeps<C>): LLMOrchestr
     const hit = await callWithProviderChain(providers, prompt, {
       temperature: config.temperature,
       maxTokens: config.maxTokens,
+      system: config.system,
+      schema: config.schema,
       validate: config.validate,
     }, { fetch: deps.fetch, log });
     if (hit) return { text: hit.text, provider: providers[hit.providerIndex]?.name ?? 'provider-chain' };

@@ -4,13 +4,13 @@
 
 **LOBBY-LOOP** ist ein digitales Point-and-Click-RPG mit politisch-satirischem Setting (Lobbyismus, Untersuchungsausschuss, Kommunalpolitik). Das Kernstück ist ein KI-Game-Master (LLM), der als System-Entität agiert, die Spielwelt aktiv manipuliert und jede Spieleraktion bewertet.
 
-**Aktueller Stand:** Playable Skeleton. Godot-4-Client mit komplettem Kern-Loop (Szenen → Hotspots → GM-Bewertung → W20 mit Boni → Events → Inventar-Kombis → Beleidigungsfechten → Perma-Death), GM-Proxy (Node/TS, `localhost:8787`, Gemini via `llm-router-blueprint` — gevendort unter `vendor/`), SQLite-Fallback (compiliert aus `content/`-JSON, ADR-0002), GM-Gedächtnis-Chronik pro Session (ADR-0004) und Karriere-Akte bei Perma-Death (ADR-0005). Die verbindliche Referenz bleibt `LOBBY-LOOP.md` inkl. Implementierungs-Anhang. Strategie-Doku: `.claude/docs/ai/lobby-loop/10x/`.
+**Aktueller Stand:** Playable Skeleton. Godot-4-Client mit komplettem Kern-Loop (Szenen → Hotspots → GM-Bewertung → W20 mit Boni → Events → Inventar-Kombis → Beleidigungsfechten → Perma-Death), GM-Proxy (Node/TS, `localhost:8787`, Gemini via `llm-router-blueprint` — gevendort unter `vendor/`), SQLite-Fallback (compiliert aus `content/`-JSON, ADR-0002), GM-Gedächtnis-Chronik pro Session (ADR-0004), Karriere-Akte bei Perma-Death (ADR-0005) und strukturierte GM-Calls — `systemInstruction`, `responseJsonSchema`, Few-shot-DC-Kalibrierung, Gemini-3-Modellkette (ADR-0007). Die verbindliche Referenz bleibt `LOBBY-LOOP.md` inkl. Implementierungs-Anhang. Strategie-Doku: `.claude/docs/ai/lobby-loop/10x/`.
 
 ## Technologie-Stack
 
 - **Engine:** Godot 4.x — nativer 2D-Support, externe API-Aufrufe direkt über `HTTPRequest`-Nodes.
 - **Skriptsprache:** GDScript (Client), TypeScript (GM-Proxy + Tools, `tsx`).
-- **LLM-Anbindung:** REST-API über den lokalen GM-Proxy, ausschließlich strukturierte JSON-Payloads in beide Richtungen (kein String-Parsing); `session_id` pro Savegame koppelt Chronik und Karriere-Akte.
+- **LLM-Anbindung:** REST-API über den lokalen GM-Proxy, ausschließlich strukturierte JSON-Payloads in beide Richtungen (kein String-Parsing); `session_id` pro Savegame koppelt Chronik und Karriere-Akte. System-Prompt geht als `systemInstruction`, die Antwortform als `responseJsonSchema` (`gm-proxy/src/schemas.ts`) — der Task-Prompt trägt nur Daten in XML-Tags und eine Aufgabe (ADR-0007).
 - **Fallback:** Lokale SQLite-Datenbank mit hartcodierten Dialogbäumen und Standard-DCs (Difficulty Classes), aktiv bei API-Timeouts oder Verbindungsabbrüchen; Minigame-Fallback-Runden werden clientseitig deterministisch permutiert.
 - **Persistenz:** Spielstand als JSON in `user://`; Perma-Death löscht den Spielstand irreversibel (Kernechanik, kein Bug).
 

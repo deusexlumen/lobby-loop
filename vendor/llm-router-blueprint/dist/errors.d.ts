@@ -10,6 +10,11 @@
  *   the key across all models; the pool moves to the next project.
  * - 'transient': 5xx overload, client-side timeout abort, network failure —
  *   neither quota nor defect; the model recovers by itself.
+ * - 'content': the provider answered, but the caller's content validation
+ *   rejected the answer (ContentRejectedError). Not a provider fault and not
+ *   quota: nothing is locked, the next candidate simply gets its turn. A
+ *   weaker fallback model that cannot hold a structured-output contract
+ *   yields to the next one instead of surfacing garbage.
  * null: unknown error. The router must throw it immediately and never fail
  * over — a real bug must not masquerade as rate limiting.
  *
@@ -19,7 +24,15 @@
  * matching is the fallback when no structure is present.
  */
 export type QuotaKind = 'rpm' | 'rpd';
-export type ErrorClass = 'quota' | 'invalid-model' | 'invalid-key' | 'transient';
+export type ErrorClass = 'quota' | 'invalid-model' | 'invalid-key' | 'transient' | 'content';
+/**
+ * Thrown by the orchestrator when an executor's answer fails the caller's
+ * `validate` hook. Carries no provider status — it is the caller's verdict on
+ * the content, which is why classifyError maps it to its own class.
+ */
+export declare class ContentRejectedError extends Error {
+    constructor(message?: string);
+}
 export interface ClassifiedError {
     class: ErrorClass;
     /** Only set when class === 'quota'. */

@@ -17,6 +17,7 @@
  * requests. Length limits belong in the prompt, not in the token cap —
  * a higher budget costs nothing while answers stay short.
  */
+import { ContentRejectedError } from './errors.js';
 import { createKeyPoolRouter, maskApiKey, resolveApiKeys, resolveModelChain, } from './key-pool-router.js';
 import { callWithProviderChain, } from './provider-chain.js';
 export const TOKEN_BUDGETS = {
@@ -59,11 +60,20 @@ export function createLLMOrchestrator(deps) {
                 prompt,
                 temperature: config.temperature ?? 0.7,
                 maxTokens: budget,
+                ...(config.system !== undefined ? { system: config.system } : {}),
+                ...(config.schema !== undefined ? { schema: config.schema } : {}),
             });
             if (res.finishReason === 'MAX_TOKENS' && attempt === 0) {
                 budget = nextRetryBudget(startBudget, budgets);
                 log(`[orchestrator] ${model}: answer truncated at ${startBudget} tokens (MAX_TOKENS) — one retry with ${budget}`);
                 continue;
+            }
+            // Checked after the truncation retry: a budget-starved answer gets its
+            // second chance on the same pair first, and only a genuinely unusable
+            // one costs the candidate. classifyError maps this to 'content', so the
+            // router advances without locking the pair.
+            if (config.validate && !config.validate(res.text)) {
+                throw new ContentRejectedError(`${model}: answer rejected by content validation`);
             }
             return { ...res, retried: attempt > 0 };
         }
@@ -74,6 +84,8 @@ export function createLLMOrchestrator(deps) {
         const hit = await callWithProviderChain(providers, prompt, {
             temperature: config.temperature,
             maxTokens: config.maxTokens,
+            system: config.system,
+            schema: config.schema,
             validate: config.validate,
         }, { fetch: deps.fetch, log });
         if (hit)

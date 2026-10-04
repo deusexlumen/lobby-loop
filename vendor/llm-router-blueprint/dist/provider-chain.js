@@ -128,9 +128,13 @@ export async function callProviderChat(provider, prompt, config = {}, hooks = {}
             signal: controller.signal,
             body: JSON.stringify({
                 model: provider.model,
-                messages: [{ role: 'user', content: prompt }],
+                messages: [
+                    ...(config.system ? [{ role: 'system', content: config.system }] : []),
+                    { role: 'user', content: prompt },
+                ],
                 temperature: config.temperature ?? 0.7,
                 max_tokens: maxTokens,
+                ...(config.schema !== undefined ? { response_format: { type: 'json_object' } } : {}),
                 stream: true,
             }),
         });
