@@ -12,7 +12,8 @@
  * all keys, a 401/403 kills the key across all models. A transient 5xx /
  * timeout / network failure locks the whole MODEL briefly — overload is
  * shared provider-side capacity, not project quota, so retrying the same
- * model on the next key would hit the same wall.
+ * model on the next key would hit the same wall. An answer the caller's
+ * validation rejects locks nothing and advances to the next candidate.
  *
  * The router is provider-agnostic: it never sees an SDK. The caller injects
  * `exec(model, apiKey)` plus now/sleep/log, and error semantics come from
@@ -23,7 +24,7 @@
  *   one promise-chain mutex. A picked pair is claimed (in-flight) and
  *   invisible to parallel callers until released — two concurrent calls
  *   never execute on the same pair at the same time.
- * - Failover happens only for the four classified error kinds; anything
+ * - Failover happens only for the five classified error kinds; anything
  *   else is thrown immediately.
  * - On success the short cooldown and the overload lock are cleared, but a
  *   set exhaustedOnPtDate marker survives until the PT day flips (the
@@ -31,6 +32,9 @@
  *   included).
  * - Total exhaustion waits only on the earliest short lock (at most
  *   rpmCooldownMs) or on an in-flight release — never on day locks.
+ * - A content rejection books no lock, so it is remembered per call instead:
+ *   the pair is struck from that call's candidates and free again for the
+ *   next one. Without that, an unlocked pair would be re-picked forever.
  * - Every mutation is persisted through the injected StateStore
  *   (InMemoryStore by default = original in-process behavior).
  */
@@ -157,13 +161,15 @@ export function createKeyPoolRouter(opts = {}) {
     const onRelease = () => new Promise((resolve) => { waiters.add(resolve); });
     // Free keys of a model in round-robin order, so consecutive calls spread
     // load across projects instead of grilling the same key first every time.
-    const pickLocked = (chain, apiKeys) => {
+    const pickLocked = (chain, apiKeys, skip) => {
         const ptToday = pacificDateString(now());
         const freeKeysFor = (m) => {
             const avail = apiKeys.filter((k) => {
                 if (deadKeys.has(k))
                     return false;
                 if (inFlight.has(pairId(m, k)))
+                    return false;
+                if (skip.has(pairId(m, k)))
                     return false;
                 const s = stateOf(m, k);
                 return s.exhaustedOnPtDate !== ptToday && s.cooldownUntil <= now();
@@ -186,7 +192,7 @@ export function createKeyPoolRouter(opts = {}) {
     };
     // Nothing is free: wait only on an expiring short lock (never on day
     // locks) or on an in-flight pair being released by a parallel call.
-    const waitLocked = (chain, apiKeys) => {
+    const waitLocked = (chain, apiKeys, skip) => {
         const ptToday = pacificDateString(now());
         let earliest = Infinity;
         let earliestPair;
@@ -198,6 +204,8 @@ export function createKeyPoolRouter(opts = {}) {
                 if (deadKeys.has(k))
                     continue;
                 if (inFlight.has(pairId(m, k)))
+                    continue;
+                if (skip.has(pairId(m, k)))
                     continue;
                 const s = stateOf(m, k);
                 if (s.exhaustedOnPtDate === ptToday)
@@ -229,14 +237,23 @@ export function createKeyPoolRouter(opts = {}) {
             throw new Error('key-pool router: no API keys in pool');
         let lastErr = null;
         let attempted = false;
+        /**
+         * Pairs that answered this call with content their caller rejected.
+         * Scoped to the call on purpose: the answer was wrong for THIS prompt,
+         * which says nothing about the pair's quota or the next prompt — so no
+         * lock is booked, and nothing survives into later calls. Remembering it
+         * here is what guarantees progress: an unlocked pair would otherwise be
+         * picked again immediately, forever.
+         */
+        const contentRejected = new Set();
         while (true) {
-            const pick = await withMutex(() => pickLocked(chain, apiKeys));
+            const pick = await withMutex(() => pickLocked(chain, apiKeys, contentRejected));
             if (!pick) {
                 // Once this call has tried candidates, failing them all is final —
                 // the wait logic below only applies when NOTHING was free up front.
                 if (attempted)
                     throw lastErr instanceof Error ? lastErr : new Error('key-pool router: all candidates failed');
-                const wait = await withMutex(() => waitLocked(chain, apiKeys));
+                const wait = await withMutex(() => waitLocked(chain, apiKeys, contentRejected));
                 if (!wait) {
                     throw new Error(`key-pool router: quota exhausted on every model (${chain.join(', ')})`);
                 }
@@ -288,6 +305,15 @@ export function createKeyPoolRouter(opts = {}) {
                         if (cls.class === 'invalid-key') {
                             await withMutex(async () => { deadKeys.add(apiKey); await persistLocked(); });
                             log(`[router] key ${maskApiKey(apiKey)}: invalid/unauthorized — permanently skipped, next key`);
+                            break;
+                        }
+                        if (cls.class === 'content') {
+                            // Not the provider's fault and not quota: no lock is booked,
+                            // the pair is only struck from THIS call's candidates. The next
+                            // one gets its turn immediately — waiting would only delay an
+                            // answer this pair already proved it cannot give.
+                            contentRejected.add(pair);
+                            log(`[router] ${model} (key ${maskApiKey(apiKey)}): answer rejected by content validation — next candidate`);
                             break;
                         }
                         if (cls.class === 'transient') {

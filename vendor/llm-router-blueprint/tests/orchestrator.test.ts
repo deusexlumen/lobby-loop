@@ -6,6 +6,7 @@ import {
   nextRetryBudget,
   type ExecutorRequest,
 } from '../src/orchestrator.js';
+import { ContentRejectedError } from '../src/errors.js';
 import type { FetchFn } from '../src/provider-chain.js';
 import { PT_NOON, makeClock } from './helpers.js';
 
@@ -154,4 +155,87 @@ test('nextRetryBudget: doubles with structured floor and retryCap ceiling', () =
   assert.equal(nextRetryBudget(2048), 4096);
   assert.equal(nextRetryBudget(4096), 4096);
   assert.deepEqual(TOKEN_BUDGETS, { micro: 512, structured: 1024, chat: 2048, retryCap: 4096 });
+});
+
+test('system and schema reach the executor request untouched', async () => {
+  const clock = makeClock(PT_NOON);
+  const requests: ExecutorRequest[] = [];
+  const schema = { type: 'object', properties: { ok: { type: 'boolean' } } };
+  const orch = createLLMOrchestrator<FakeClient>({
+    apiKeys: ['k1'],
+    getModelChainConfig: () => ({ primary: 'gm1' }),
+    createClient: (key) => ({ key }),
+    exec: (_c, req) => { requests.push(req); return Promise.resolve({ text: '{"ok":true}', finishReason: 'STOP' }); },
+    routerOptions: { now: clock.now, sleep: clock.sleep },
+  });
+
+  await orch.callLLM('the task', { system: 'be terse', schema });
+  assert.equal(requests[0].system, 'be terse');
+  assert.deepEqual(requests[0].schema, schema);
+
+  // Omitted, not undefined-valued: an executor spreading the request into an
+  // SDK config must not send empty keys for options the caller never set.
+  await orch.callLLM('the task');
+  assert.ok(!('system' in requests[1]));
+  assert.ok(!('schema' in requests[1]));
+});
+
+test('a rejected answer costs the candidate, not the pair: next model, nothing locked', async () => {
+  const clock = makeClock(PT_NOON);
+  const seen: string[] = [];
+  const orch = createLLMOrchestrator<FakeClient>({
+    apiKeys: ['k1'],
+    getModelChainConfig: () => ({ primary: 'gm1', fallbacks: ['gm2'] }),
+    createClient: (key) => ({ key }),
+    exec: (_c, req) => {
+      seen.push(req.model);
+      return Promise.resolve({ text: req.model === 'gm1' ? 'not json' : '{"ok":true}', finishReason: 'STOP' });
+    },
+    routerOptions: { now: clock.now, sleep: clock.sleep },
+  });
+
+  const res = await orch.callLLMWithMeta('p', { model: 'gm1', validate: (t) => t.startsWith('{') });
+  assert.equal(res.text, '{"ok":true}');
+  assert.equal(res.provider, 'key-pool:gm2');
+  assert.deepEqual(seen, ['gm1', 'gm2']);
+  // No cooldown was booked, so gm1 is a candidate again right away.
+  assert.deepEqual(clock.sleeps, []);
+});
+
+test('the last candidate rejecting throws ContentRejectedError', async () => {
+  const clock = makeClock(PT_NOON);
+  const orch = createLLMOrchestrator<FakeClient>({
+    apiKeys: ['k1'],
+    getModelChainConfig: () => ({ primary: 'gm1' }),
+    createClient: (key) => ({ key }),
+    exec: () => Promise.resolve({ text: 'not json', finishReason: 'STOP' }),
+    routerOptions: { now: clock.now, sleep: clock.sleep },
+  });
+
+  await assert.rejects(
+    orch.callLLM('p', { validate: (t) => t.startsWith('{') }),
+    (err: unknown) => err instanceof ContentRejectedError && /gm1/.test((err as Error).message),
+  );
+});
+
+test('validation runs after the truncation retry, never instead of it', async () => {
+  const clock = makeClock(PT_NOON);
+  const budgets: number[] = [];
+  const orch = createLLMOrchestrator<FakeClient>({
+    apiKeys: ['k1'],
+    getModelChainConfig: () => ({ primary: 'gm1' }),
+    createClient: (key) => ({ key }),
+    exec: (_c, req) => {
+      budgets.push(req.maxTokens);
+      // First answer is truncated mid-JSON; the doubled budget completes it.
+      return Promise.resolve(budgets.length === 1
+        ? { text: '{"ok":tr', finishReason: 'MAX_TOKENS' }
+        : { text: '{"ok":true}', finishReason: 'STOP' });
+    },
+    routerOptions: { now: clock.now, sleep: clock.sleep },
+  });
+
+  const text = await orch.callLLM('p', { maxTokens: 64, validate: (t) => t.endsWith('}') });
+  assert.equal(text, '{"ok":true}');
+  assert.deepEqual(budgets, [64, nextRetryBudget(64, TOKEN_BUDGETS)]);
 });

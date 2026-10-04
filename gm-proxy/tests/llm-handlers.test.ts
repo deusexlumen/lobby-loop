@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createMemoryChronicleStore, type ChronicleEntry } from '../src/chronicle.js';
 import { GmUnavailableError } from '../src/errors.js';
-import { createGmHandlers, type LlmCaller } from '../src/llm-handlers.js';
+import { createGmHandlers, type LlmCallOptions, type LlmCaller } from '../src/llm-handlers.js';
 
 const ACTION_REQUEST = {
   player_inventory: ['unschuldsvermutung'],
@@ -27,8 +27,10 @@ const ACTION_LLM_JSON = JSON.stringify({
 
 test('action: valide LLM-Antwort wird geparst und validiert', async () => {
   const calls: string[] = [];
-  const call: LlmCaller = async (prompt) => {
+  const options: Array<LlmCallOptions | undefined> = [];
+  const call: LlmCaller = async (prompt, opts) => {
     calls.push(prompt);
+    options.push(opts);
     return ACTION_LLM_JSON;
   };
   const handlers = createGmHandlers(call);
@@ -37,7 +39,28 @@ test('action: valide LLM-Antwort wird geparst und validiert', async () => {
   assert.equal(res.trigger_event, null);
   assert.equal(calls.length, 1);
   assert.match(calls[0], /Aktionsbewertung/);
-  assert.match(calls[0], /System-Prompt|Game Master/);
+  // Der System-Prompt reist getrennt — im Task-Prompt hat er nichts verloren.
+  assert.match(options[0]?.system ?? '', /Game Master/);
+  assert.doesNotMatch(calls[0], /Game Master/);
+  // Spielereingabe als ausgewiesenes Datum, nicht als weitere Anweisungszeile.
+  assert.match(calls[0], /<player_input>\nDem Bürgermeister die Hand schütteln\.\n<\/player_input>/);
+});
+
+test('action: Schema und Transport-Validierung werden mitgegeben', async () => {
+  const options: Array<LlmCallOptions | undefined> = [];
+  const call: LlmCaller = async (_prompt, opts) => {
+    options.push(opts);
+    return ACTION_LLM_JSON;
+  };
+  await createGmHandlers(call).action(ACTION_REQUEST);
+  const schema = options[0]?.schema as { properties?: Record<string, unknown> } | undefined;
+  assert.ok(schema?.properties?.difficulty_class, 'Antwortschema reicht bis zum Caller durch');
+  // Dieselbe Prüfung wie im Handler, nur als Ja/Nein: Der Router kann damit
+  // den Kandidaten wechseln, bevor die kaputte Antwort hier ankommt.
+  const accepts = options[0]?.validate;
+  assert.equal(accepts?.(ACTION_LLM_JSON), true);
+  assert.equal(accepts?.('Prosa ohne JSON'), false);
+  assert.equal(accepts?.(JSON.stringify({ gm_dialogue: 'x', required_roll: 'W20', difficulty_class: 99 })), false);
 });
 
 test('action: ungültiges JSON → strukturierter Retry → Erfolg', async () => {
@@ -175,7 +198,7 @@ test('action: Chronik-Einträge werden in den Prompt injiziert', async () => {
   const handlers = createGmHandlers(call, store);
   await handlers.action({ ...ACTION_REQUEST, session_id: 'savegame_1' });
   assert.equal(calls.length, 1);
-  assert.match(calls[0]!, /Chronik früherer/);
+  assert.match(calls[0]!, /<chronik>/);
   assert.match(calls[0]!, /Koffer verlegt/);
   assert.match(calls[0]!, /remove_item/);
 });
@@ -233,8 +256,10 @@ const EPITAPH_LLM_JSON = JSON.stringify({
 
 test('epitaph: Karriere-Akte wird gegen den Registratur-Prompt generiert', async () => {
   const calls: string[] = [];
-  const call: LlmCaller = async (prompt, options) => {
+  const options: Array<LlmCallOptions | undefined> = [];
+  const call: LlmCaller = async (prompt, opts) => {
     calls.push(prompt);
+    options.push(opts);
     return EPITAPH_LLM_JSON;
   };
   const handlers = createGmHandlers(call);
@@ -251,7 +276,9 @@ test('epitaph: Karriere-Akte wird gegen den Registratur-Prompt generiert', async
   assert.equal(res.highlights.length, 3);
   assert.match(res.epitaph, /Akte|Mandat/i);
   assert.match(calls[0]!, /Karriere-Akte \(\/run\/epitaph\)/);
-  assert.match(calls[0]!, /Registratur/);
+  // Der Registratur-Prompt ersetzt den GM-System-Prompt — im Instruktions-Slot.
+  assert.match(options[0]?.system ?? '', /Registratur/);
+  assert.doesNotMatch(options[0]?.system ?? '', /System-Prompt des KI-Game-Masters/);
 });
 
 test('epitaph: dauerhaft ungültige Antwort → GmUnavailableError (Client generiert lokal)', async () => {

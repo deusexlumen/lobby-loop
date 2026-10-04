@@ -10,6 +10,11 @@
  *   the key across all models; the pool moves to the next project.
  * - 'transient': 5xx overload, client-side timeout abort, network failure —
  *   neither quota nor defect; the model recovers by itself.
+ * - 'content': the provider answered, but the caller's content validation
+ *   rejected the answer (ContentRejectedError). Not a provider fault and not
+ *   quota: nothing is locked, the next candidate simply gets its turn. A
+ *   weaker fallback model that cannot hold a structured-output contract
+ *   yields to the next one instead of surfacing garbage.
  * null: unknown error. The router must throw it immediately and never fail
  * over — a real bug must not masquerade as rate limiting.
  *
@@ -21,7 +26,19 @@
 
 export type QuotaKind = 'rpm' | 'rpd';
 
-export type ErrorClass = 'quota' | 'invalid-model' | 'invalid-key' | 'transient';
+export type ErrorClass = 'quota' | 'invalid-model' | 'invalid-key' | 'transient' | 'content';
+
+/**
+ * Thrown by the orchestrator when an executor's answer fails the caller's
+ * `validate` hook. Carries no provider status — it is the caller's verdict on
+ * the content, which is why classifyError maps it to its own class.
+ */
+export class ContentRejectedError extends Error {
+  constructor(message = 'answer rejected by content validation') {
+    super(message);
+    this.name = 'ContentRejectedError';
+  }
+}
 
 export interface ClassifiedError {
   class: ErrorClass;
@@ -76,6 +93,12 @@ function extractFields(err: unknown): ErrorFields {
 export function classifyError(err: unknown): ClassifiedError | null {
   const { status, code, name, message } = extractFields(err);
   const codeUp = code?.toUpperCase();
+
+  // First: the caller's own verdict. Checked by name as well as by instance so
+  // a duplicated module copy (vendored next to a dependency) still classifies.
+  if (err instanceof ContentRejectedError || name === 'ContentRejectedError') {
+    return { class: 'content' };
+  }
 
   if (
     status === 429 || codeUp === 'RESOURCE_EXHAUSTED'

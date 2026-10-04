@@ -1,22 +1,3 @@
-/**
- * orchestrator.ts — single decision point "provider chain first, key-pool
- * router as fallback", plus the MAX_TOKENS retry safety net.
- *
- * Every LLM path of an app should route through this one seam so the two
- * transports cannot drift apart. The orchestrator ships without any SDK:
- * the app injects `createClient(apiKey)` (clients are cached per key in a
- * closure map — the client is stateless, rebuilding it per request is
- * pointless GC pressure) and `exec(client, request)`, which performs one
- * generation and reports `finishReason` so the retry can fire.
- *
- * MAX_TOKENS safety net: some providers (e.g. Gemini 3.x) let thinking
- * tokens share the output budget with the visible answer, so a truncated
- * answer must never reach the user. Exactly one retry with a doubled budget
- * (floor `structured`, ceiling `retryCap`). It is a safety net, not a
- * strategy: if it fires in normal operation, every call costs TWO model
- * requests. Length limits belong in the prompt, not in the token cap —
- * a higher budget costs nothing while answers stay short.
- */
 import { type KeyPoolRouter, type KeyPoolRouterOptions, type ModelChainConfig } from './key-pool-router.js';
 import { type FetchFn, type ProviderConfig } from './provider-chain.js';
 /** Output token budgets per call class. */
@@ -42,6 +23,21 @@ export interface ExecutorRequest {
     prompt: string;
     temperature: number;
     maxTokens: number;
+    /**
+     * System-level instructions, kept apart from `prompt` so the executor can
+     * map them to its provider's dedicated slot (a system instruction, a
+     * system message). Separating them is what binds persona and output
+     * contract more firmly than prepending them to the user turn — and it
+     * keeps untrusted input out of the instruction role.
+     */
+    system?: string;
+    /**
+     * Requested response schema, passed through verbatim. Deliberately
+     * `unknown`: the shape belongs to the provider (a JSON Schema for
+     * structured output, a response_format object), and this blueprint stays
+     * provider-agnostic. The executor maps it or ignores it.
+     */
+    schema?: unknown;
 }
 export interface ExecutorResult {
     text: string;
@@ -72,6 +68,17 @@ export interface OrchestratorCallConfig {
     maxTokens?: number;
     /** Explicit model: replaces the primary, keeps the fallbacks. */
     model?: string;
+    /** System instructions — see ExecutorRequest.system. */
+    system?: string;
+    /** Requested response schema — see ExecutorRequest.schema. */
+    schema?: unknown;
+    /**
+     * Content validation. A rejected answer is not a provider failure, but it
+     * is not usable either: both paths fail over to the next candidate rather
+     * than returning it (provider chain → next provider, key-pool router →
+     * next Model×Key pair). The last candidate's rejection is thrown as a
+     * ContentRejectedError.
+     */
     validate?: (text: string) => boolean;
 }
 export interface OrchestratorResult {

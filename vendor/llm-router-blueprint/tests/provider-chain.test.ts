@@ -116,3 +116,23 @@ test('the timeout budget scales with maxTokens (TTFB + per-token)', () => {
   assert.equal(providerCallTimeoutMs(2048), 180_000 + 2048 * 150);
   assert.equal(providerCallTimeoutMs(0), 180_000);
 });
+
+test('system instructions lead the message list; a schema switches on JSON mode', async () => {
+  const bodies: Array<Record<string, unknown>> = [];
+  const { fetchFn } = fakeFetch((url, init) => {
+    if (url.endsWith('/v1/models')) return { ok: true };
+    bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+    return { ok: true, text: sse('{}') };
+  });
+
+  await callWithProviderChain([twoProviders[0]], 'the task', { system: 'be terse' }, { fetch: fetchFn });
+  assert.deepEqual(bodies[0].messages, [
+    { role: 'system', content: 'be terse' },
+    { role: 'user', content: 'the task' },
+  ]);
+  assert.equal(bodies[0].response_format, undefined);
+
+  await callWithProviderChain([twoProviders[0]], 'the task', { schema: { type: 'object' } }, { fetch: fetchFn });
+  assert.deepEqual(bodies[1].messages, [{ role: 'user', content: 'the task' }]);
+  assert.deepEqual(bodies[1].response_format, { type: 'json_object' });
+});

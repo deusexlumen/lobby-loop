@@ -39,6 +39,16 @@ export interface ChainHooks {
 export interface ProviderCallConfig {
   temperature?: number;
   maxTokens?: number;
+  /** Sent as a leading `system` message when set. */
+  system?: string;
+  /**
+   * Presence switches the endpoint into JSON mode
+   * (`response_format: {type: 'json_object'}`) — the one structured-output
+   * form OpenAI-compatible servers agree on. The schema itself stays in the
+   * prompt: per-provider `json_schema` support is too uneven to send blind
+   * down a chain whose point is that any endpoint can stand in.
+   */
+  schema?: unknown;
   /**
    * Optional content validation. Returning false counts as a transport
    * failure — the next provider is tried. Background: some endpoints answer
@@ -170,9 +180,13 @@ export async function callProviderChat(
       signal: controller.signal,
       body: JSON.stringify({
         model: provider.model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          ...(config.system ? [{ role: 'system', content: config.system }] : []),
+          { role: 'user', content: prompt },
+        ],
         temperature: config.temperature ?? 0.7,
         max_tokens: maxTokens,
+        ...(config.schema !== undefined ? { response_format: { type: 'json_object' } } : {}),
         stream: true,
       }),
     });
